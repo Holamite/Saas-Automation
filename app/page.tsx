@@ -1,38 +1,34 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { LandingPage } from "@/components/landing/landing-page"
-import { LoginPage } from "@/components/auth/login-page"
-import { SignupPage } from "@/components/auth/signup-page"
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
+import { LandingPage } from '@/components/landing/landing-page'
+import { Loading } from '@/components/ui/loading'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
+import { useEffect } from 'react'
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState<"landing" | "login" | "signup" | "dashboard">("landing")
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
+  const { isAuthenticated, isLoading } = useAuth()
 
-  const handleLogin = () => {
-    setIsAuthenticated(true)
-    setCurrentPage("dashboard")
+  // Redirect to dashboard if authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
+
+  if (isLoading) {
+    return <Loading />
   }
 
-  if (currentPage === "landing" && !isAuthenticated) {
-    return <LandingPage onGetStarted={() => setCurrentPage("signup")} onSignIn={() => setCurrentPage("login")} />
-  }
-
-  if (!isAuthenticated) {
-    return currentPage === "login" ? (
-      <LoginPage onLoginSuccess={handleLogin} onSwitchToSignup={() => setCurrentPage("signup")} />
-    ) : (
-      <SignupPage onSignupSuccess={handleLogin} onSwitchToLogin={() => setCurrentPage("login")} />
-    )
+  if (isAuthenticated) {
+    return null // Will redirect
   }
 
   return (
-    <DashboardLayout
-      onLogout={() => {
-        setIsAuthenticated(false)
-        setCurrentPage("landing")
-      }}
+    <LandingPage
+      onGetStarted={() => router.push('/signup')}
+      onSignIn={() => router.push('/login')}
     />
   )
 }

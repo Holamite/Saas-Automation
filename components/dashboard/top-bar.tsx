@@ -1,13 +1,18 @@
-"use client"
+'use client'
 
-import { Bell, User, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Bell, User, LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/contexts/auth-context'
+import { getUserDisplayName } from '@/lib/utils/user'
 
 interface TopBarProps {
   onLogout: () => void
 }
 
 export function TopBar({ onLogout }: TopBarProps) {
+  const { user } = useAuth()
+  const displayName = getUserDisplayName(user)
+
   return (
     <header className="bg-card border-b border-border px-8 py-4 flex items-center justify-between">
       <div>
@@ -16,23 +21,32 @@ export function TopBar({ onLogout }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
+        <button
+          className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition"
+          aria-label="Notifications"
+        >
+          <Bell className="w-5 h-5" aria-hidden="true" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" aria-hidden="true"></span>
         </button>
 
         <div className="flex items-center gap-3 pl-4 border-l border-border">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-primary-foreground" />
+            <User className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-foreground">Adebara Olamide</p>
+            <p className="text-sm font-medium text-foreground">{displayName}</p>
             <p className="text-xs text-muted-foreground">Merchant</p>
           </div>
         </div>
 
-        <Button onClick={onLogout} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-          <LogOut className="w-4 h-4" />
+        <Button
+          onClick={onLogout}
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Logout"
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
         </Button>
       </div>
     </header>

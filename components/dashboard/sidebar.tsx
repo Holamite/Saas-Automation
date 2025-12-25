@@ -1,21 +1,23 @@
-"use client"
+'use client'
 
-import { LayoutDashboard, CreditCard, ShoppingCart, Zap, FileText, Settings } from "lucide-react"
+import { usePathname, useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { DASHBOARD_MENU_ITEMS } from '@/lib/constants/dashboard-menu'
 
-interface SidebarProps {
-  currentPage: string
-  onNavigate: (page: string) => void
-}
+export function Sidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
 
-export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
-  const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "transactions", label: "Transactions", icon: CreditCard },
-    { id: "orders", label: "Orders", icon: ShoppingCart },
-    { id: "connectivity", label: "Connectivity", icon: Zap },
-    { id: "subscription", label: "Subscription", icon: FileText },
-    { id: "settings", label: "Settings", icon: Settings },
-  ]
+  const handleNavigate = (path: string) => {
+    router.push(path)
+  }
+
+  const isActive = (path: string) => {
+    if (path === '/dashboard') {
+      return pathname === '/dashboard'
+    }
+    return pathname === path
+  }
 
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -28,21 +30,23 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
+      <nav className="flex-1 p-4 space-y-2" aria-label="Main navigation">
+        {DASHBOARD_MENU_ITEMS.map((item) => {
           const Icon = item.icon
-          const isActive = currentPage === item.id
+          const active = isActive(item.path)
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent"
-              }`}
+              onClick={() => handleNavigate(item.path)}
+              className={cn(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
+                active
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              )}
+              aria-current={active ? 'page' : undefined}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" aria-hidden="true" />
               <span className="font-medium">{item.label}</span>
             </button>
           )
