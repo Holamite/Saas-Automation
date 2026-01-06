@@ -308,7 +308,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
                   </div>
-                  <p className="text-sm text-primary font-semibold mb-8">{plan.computationPower}</p>
+                  <p className="text-sm text-primary font-semibold">{plan.computationPower}</p>
 
                   <Button
                     className={`w-full py-6 ${

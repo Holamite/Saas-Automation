@@ -77,7 +77,7 @@ function OrderCard({ order }: { order: (typeof allOrders)[0] }) {
       </div>
       
       <div className="flex gap-0.5">
-         <Button variant="destructive" className="w-1/2">
+         <Button variant="default" className="w-1/2">
           Pay
         </Button>
         <Button variant="secondary" className="w-1/2">

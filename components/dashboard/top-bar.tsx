@@ -22,7 +22,7 @@ export function TopBar({ onLogout }: TopBarProps) {
 
       <div className="flex items-center gap-4">
         <button
-          className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition"
+          className="relative p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-secondary rounded-lg transition"
           aria-label="Notifications"
         >
           <Bell className="w-5 h-5" aria-hidden="true" />

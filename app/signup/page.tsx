@@ -266,7 +266,7 @@ export default function Signup() {
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <input type="checkbox" id="terms" className="rounded border-border" required />
+              <input type="checkbox" id="terms" className=" cursor-pointer rounded border-border" required />
               <label htmlFor="terms" className="text-muted-foreground cursor-pointer">
                 I agree to the{' '}
                 <a href="#" className="text-primary hover:underline">

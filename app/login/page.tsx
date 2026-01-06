@@ -145,7 +145,7 @@ export default function Login() {
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-border" />
+                <input type="checkbox" className=" cursor-pointer rounded border-border" />
                 <span className="text-foreground">Remember me</span>
               </label>
               <a href="#" className="text-primary hover:underline">
