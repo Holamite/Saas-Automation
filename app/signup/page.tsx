@@ -10,6 +10,7 @@ import { FormDivider } from '@/components/auth/form-divider'
 import { ErrorAlert } from '@/components/auth/error-alert'
 import { BrandHeader } from '@/components/auth/brand-header'
 import { Mail, Lock, User, Building } from 'lucide-react'
+import { PasswordInput } from '@/components/ui/password-input'
 import { signup } from '@/lib/auth'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/auth-context'
@@ -230,10 +231,9 @@ export default function Signup() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                <Input
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10 pointer-cursor" aria-hidden="true" />
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="Enter password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -250,10 +250,9 @@ export default function Signup() {
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                <Input
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground z-10 pointer-cursor" aria-hidden="true" />
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   placeholder="Confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
