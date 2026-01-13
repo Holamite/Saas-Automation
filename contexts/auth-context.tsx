@@ -23,8 +23,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      // Since /auth/me doesn't exist, we use sessionStorage for persistence
-      // and verify cookies by attempting a refresh
+      // First, verify cookies are valid by attempting refresh
+      const refreshResponse = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!refreshResponse.ok) {
+        // Cookies invalid, clear storage and state
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('auth_user')
+        }
+        setUser(null)
+        return
+      }
+
+      // Cookies are valid, try to fetch user data
+      // First check sessionStorage for cached user
       const storedUser = typeof window !== 'undefined' 
         ? sessionStorage.getItem('auth_user')
         : null
@@ -32,39 +50,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedUser) {
         try {
           const user = JSON.parse(storedUser)
-          // Verify cookies are still valid by attempting refresh
-          // Use API proxy route to avoid CORS issues
-          const refreshResponse = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          })
-
-          if (refreshResponse.ok) {
-            // Cookies are valid, restore user from storage
-            setUser(user)
-          } else {
-            // Cookies invalid, clear storage
-            if (typeof window !== 'undefined') {
-              sessionStorage.removeItem('auth_user')
-            }
-            setUser(null)
-          }
+          setUser(user)
         } catch {
-          // Invalid stored data or refresh failed, clear storage
+          // Invalid stored data, clear it
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('auth_user')
           }
-          setUser(null)
         }
-      } else {
-        // No stored user, not authenticated
-        setUser(null)
+      }
+
+      // Try to fetch fresh user data from /auth/me endpoint
+      try {
+        const userResponse = await api.get<User>('/auth/me')
+        if (userResponse) {
+          setUser(userResponse)
+          // Cache user data
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('auth_user', JSON.stringify(userResponse))
+          }
+        }
+      } catch {
+        // /auth/me endpoint might not exist, that's okay
+        // We'll rely on sessionStorage if available
       }
     } catch (error) {
       // Error checking auth, clear state
+      console.error('Auth check error:', error)
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('auth_user')
       }

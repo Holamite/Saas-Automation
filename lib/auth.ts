@@ -128,38 +128,26 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Generate a random state parameter for CSRF protection
+ * Get current authenticated user
+ * Backend should return user data if cookies are valid
  */
-function generateState(): string {
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
-/**
- * Store OAuth state in sessionStorage for verification
- */
-function storeOAuthState(state: string): void {
-  if (typeof window !== 'undefined') {
-    sessionStorage.setItem('oauth_state', state)
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    // Try to get user from /auth/me endpoint
+    // If that doesn't exist, we'll use refresh endpoint response
+    const response = await api.get<User>('/auth/me')
+    return response
+  } catch (error) {
+    // If /auth/me doesn't exist, return null
+    // The auth context will handle verification via refresh
+    return null
   }
 }
 
 /**
- * Verify OAuth state parameter
- */
-export function verifyOAuthState(state: string): boolean {
-  if (typeof window === 'undefined') return false
-  const storedState = sessionStorage.getItem('oauth_state')
-  if (storedState) {
-    sessionStorage.removeItem('oauth_state')
-    return storedState === state
-  }
-  return false
-}
-
-/**
- * Initiate Google OAuth flow with CSRF protection
+ * Initiate Google OAuth flow
+ * Simply redirects to backend OAuth endpoint
+ * Backend handles the entire OAuth flow and redirects to /auth/success or /auth/error
  */
 export function initiateGoogleAuth(): void {
   const BASE_URL = process.env.NEXT_PUBLIC_BASEURL || ''
@@ -167,27 +155,10 @@ export function initiateGoogleAuth(): void {
     throw new Error('NEXT_PUBLIC_BASEURL environment variable is not set')
   }
 
-  // Generate state parameter for CSRF protection
-  const state = generateState()
-  storeOAuthState(state)
-
-  // Get redirect URI (frontend callback URL)
-  const redirectUri = typeof window !== 'undefined' 
-    ? `${window.location.origin}/auth/callback`
-    : `${BASE_URL}/auth/callback`
-
-  // Build OAuth URL with state and redirect_uri
-  const params = new URLSearchParams({
-    state,
-    redirect_uri: redirectUri,
-  })
-
-  const oauthUrl = `${BASE_URL}/auth/google?${params.toString()}`
-  
-  // Redirect to Google OAuth endpoint
-  // Backend will handle OAuth and set HttpOnly cookies
+  // Redirect to backend Google OAuth endpoint
+  // Backend will handle OAuth flow and redirect to /auth/success or /auth/error
   if (typeof window !== 'undefined') {
-    window.location.href = oauthUrl
+    window.location.href = `${BASE_URL}/auth/google`
   }
 }
 
