@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl)
       }
 
-      // Since /auth/me doesn't exist, verify cookies by attempting refresh
+      // Verify cookies by attempting refresh
       // Use API proxy route to avoid CORS issues
       const refreshUrl = `${request.nextUrl.origin}/api/auth/refresh`
       const response = await fetch(refreshUrl, {

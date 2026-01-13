@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BASEURL || 'http://localhost:3000'
 export async function GET(request: NextRequest) {
   try {
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/auth/me`, {
+    const response = await fetch(`${BACKEND_URL}/auth/users`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -16,13 +16,13 @@ export async function GET(request: NextRequest) {
     })
 
     // Parse response data
-    let data: any = {}
+    let data: any = []
     const contentType = response.headers.get('content-type')
     if (contentType?.includes('application/json')) {
       try {
         data = await response.json()
       } catch {
-        // Response is not JSON, use empty object
+        // Response is not JSON, use empty array
       }
     }
 

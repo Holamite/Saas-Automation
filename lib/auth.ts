@@ -128,19 +128,30 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Get current authenticated user
- * Backend should return user data if cookies are valid
+ * Get linked accounts for the current authenticated user
+ * Backend returns linked accounts if cookies are valid
  */
-export async function getCurrentUser(): Promise<User | null> {
+export async function getLinkedAccounts(): Promise<Account[]> {
   try {
-    // Try to get user from /auth/me endpoint
-    // If that doesn't exist, we'll use refresh endpoint response
-    const response = await api.get<User>('/auth/me')
-    return response
+    const response = await api.get<Account[]>('/auth/linked-accounts')
+    return Array.isArray(response) ? response : []
   } catch (error) {
-    // If /auth/me doesn't exist, return null
-    // The auth context will handle verification via refresh
-    return null
+    // If linked accounts endpoint fails, return empty array
+    return []
+  }
+}
+
+/**
+ * Get list of all users
+ * Backend returns list of users if cookies are valid and user has permission
+ */
+export async function getUsers(): Promise<User[]> {
+  try {
+    const response = await api.get<User[]>('/auth/users')
+    return Array.isArray(response) ? response : []
+  } catch (error) {
+    // If users endpoint fails, return empty array
+    return []
   }
 }
 

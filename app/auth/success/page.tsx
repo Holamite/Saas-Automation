@@ -12,24 +12,8 @@ export default function AuthSuccess() {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        // Verify authentication by checking if cookies are valid
-        // First, try to refresh to ensure tokens are valid
-        const refreshResponse = await fetch('/api/auth/refresh', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!refreshResponse.ok) {
-          // Cookies invalid, redirect to login
-          setError('Authentication failed. Please try again.')
-          setTimeout(() => router.push('/login'), 3000)
-          return
-        }
-
-        // Verify via checkAuth which will fetch user data if available
+        // Backend already validated cookies and set them
+        // Just verify session via checkAuth which handles cookie validation
         await checkAuth()
         
         // Small delay to ensure state is updated

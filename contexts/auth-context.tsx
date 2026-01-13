@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api-client'
-import type { User } from '@/lib/auth'
+import type { User, Account } from '@/lib/auth'
 
 interface AuthContextType {
   user: User | null
@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   const checkAuth = useCallback(async () => {
+    setIsLoading(true)
     try {
+      // Since /auth/me doesn't exist, we use sessionStorage for persistence
       // First, verify cookies are valid by attempting refresh
       const refreshResponse = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -38,19 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           sessionStorage.removeItem('auth_user')
         }
         setUser(null)
+        setIsLoading(false)
         return
       }
 
-      // Cookies are valid, try to fetch user data
-      // First check sessionStorage for cached user
+      // Cookies are valid, try to get user data
+      // First check sessionStorage for cached user (from login/register responses)
+      let userData: User | null = null
       const storedUser = typeof window !== 'undefined' 
         ? sessionStorage.getItem('auth_user')
         : null
 
       if (storedUser) {
         try {
-          const user = JSON.parse(storedUser)
-          setUser(user)
+          userData = JSON.parse(storedUser)
         } catch {
           // Invalid stored data, clear it
           if (typeof window !== 'undefined') {
@@ -59,19 +62,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Try to fetch fresh user data from /auth/me endpoint
-      try {
-        const userResponse = await api.get<User>('/auth/me')
-        if (userResponse) {
-          setUser(userResponse)
-          // Cache user data
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('auth_user', JSON.stringify(userResponse))
+      // If no user in storage but cookies are valid (e.g., after OAuth),
+      // try to get user info from linked accounts or use a minimal user object
+      // For now, we'll set a minimal user if we have valid cookies but no stored user
+      // The actual user data will be populated on next login/register
+      if (!userData) {
+        // After OAuth, we might not have user data yet
+        // Try to fetch linked accounts to verify session
+        try {
+          const linkedAccountsResponse = await api.get<Account[]>('/auth/linked-accounts')
+          if (linkedAccountsResponse && Array.isArray(linkedAccountsResponse)) {
+            // We have valid session but no user data
+            // Create a minimal user object - this will be updated on next full auth
+            // For OAuth flow, the backend should have set user data, but if not,
+            // we'll rely on the fact that cookies are valid
+            userData = {
+              id: 'temp',
+              email: '',
+              name: '',
+              role: 'user',
+              businessName: null,
+              accounts: linkedAccountsResponse.map(acc => ({
+                provider: acc.provider,
+                linkedAt: acc.linkedAt,
+              })),
+            }
+          }
+        } catch {
+          // Linked accounts failed, but cookies are valid
+          // This might happen right after OAuth before user data is fully set
+          // We'll set a minimal user to prevent redirect loop
+          userData = {
+            id: 'temp',
+            email: '',
+            name: '',
+            role: 'user',
+            businessName: null,
+            accounts: [],
           }
         }
-      } catch {
-        // /auth/me endpoint might not exist, that's okay
-        // We'll rely on sessionStorage if available
+      } else {
+        // We have stored user, optionally fetch fresh linked accounts
+        try {
+          const linkedAccountsResponse = await api.get<Account[]>('/auth/linked-accounts')
+          if (linkedAccountsResponse && Array.isArray(linkedAccountsResponse)) {
+            // Update user with fresh linked accounts data
+            userData = {
+              ...userData,
+              accounts: linkedAccountsResponse.map(acc => ({
+                provider: acc.provider,
+                linkedAt: acc.linkedAt,
+              })),
+            }
+          }
+        } catch {
+          // Linked accounts endpoint might fail, that's okay
+          // We'll use the cached user data
+        }
+      }
+
+      // Set user data if we have it
+      if (userData) {
+        setUser(userData)
+        // Cache user data
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auth_user', JSON.stringify(userData))
+        }
+      } else {
+        // No user data available, clear state
+        setUser(null)
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('auth_user')
+        }
       }
     } catch (error) {
       // Error checking auth, clear state
