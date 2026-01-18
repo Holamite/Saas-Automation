@@ -1,5 +1,5 @@
-import {  WalletPage } from '@/components/dashboard/pages/wallet-page'
+import { WalletPage } from "@/components/dashboard/pages/wallet-page"
 
-export default function Transactions() {
+export default function Wallet() {
   return <WalletPage />
 }
