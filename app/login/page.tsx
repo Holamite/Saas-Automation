@@ -11,7 +11,6 @@ import { ErrorAlert } from '@/components/auth/error-alert'
 import { BrandHeader } from '@/components/auth/brand-header'
 import { Lock, Mail } from 'lucide-react'
 import { PasswordInput } from '@/components/ui/password-input'
-import { login } from '@/lib/auth'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/auth-context'
 import { useOAuthHandler } from '@/hooks/use-oauth-handler'
@@ -19,7 +18,7 @@ import { extractAuthErrorMessage } from '@/lib/utils/error-handling'
 
 export default function Login() {
   const router = useRouter()
-  const { isAuthenticated, isLoading, checkAuth, setUser } = useAuth()
+  const { isAuthenticated, isLoading, login } = useAuth()
   const { handleOAuth } = useOAuthHandler()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -40,22 +39,11 @@ export default function Login() {
     setIsFormLoading(true)
 
     try {
-      const response = await login({
-        email,
-        password,
-      })
-
-      // Use response message if available, otherwise use default
-      const successMessage = response.message || 'Logged in successfully!'
-
-      // Store user data in sessionStorage for persistence
-      if (response.user) {
-        setUser(response.user)
-      }
+      await login({ email, password })
 
       toast({
         title: 'Success',
-        description: successMessage,
+        description: 'Logged in successfully!',
       })
 
       router.push('/dashboard')

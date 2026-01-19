@@ -1,22 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
-export default function AuthError() {
+function AuthErrorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [errorMessage, setErrorMessage] = useState<string>('Authentication failed')
 
   useEffect(() => {
-    // Get error message from URL query parameter
     const message = searchParams.get('message')
-    if (message) {
-      // Decode the message if it's URL encoded
-      setErrorMessage(decodeURIComponent(message))
-    }
+    if (message) setErrorMessage(decodeURIComponent(message))
   }, [searchParams])
 
   return (
@@ -28,14 +24,19 @@ export default function AuthError() {
         <h2 className="text-2xl font-bold text-foreground mb-4">Authentication Error</h2>
         <p className="text-muted-foreground mb-6">{errorMessage}</p>
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={() => router.push('/login')}
-            className="w-full"
-          >
+          <Button onClick={() => router.push('/login')} className="w-full">
             Return to Login
           </Button>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>}>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

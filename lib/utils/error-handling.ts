@@ -1,19 +1,24 @@
-import { ApiClientError } from '@/lib/api-client'
+import { ApiClientError } from '@/lib/api'
 
 /**
- * Extract error message from ApiClientError or unknown error
+ * Extract error message from ApiClientError or unknown error.
+ * Surfaces backend validation messages (e.g. 400) instead of generic "Request failed with status 400".
  */
 export function extractErrorMessage(error: unknown, defaultMessage: string): string {
   if (error instanceof ApiClientError) {
-    // Handle validation errors
-    if (error.errors) {
-      const errorValues = Object.values(error.errors)
+    // Prefer field-level validation errors (e.g. { password: ["Must include special char"] })
+    if (error.errors && typeof error.errors === 'object') {
+      const errorValues = Array.isArray(error.errors) ? error.errors : Object.values(error.errors)
       if (errorValues.length > 0) {
-        const firstError = errorValues[0]
-        if (Array.isArray(firstError) && firstError.length > 0) {
-          return firstError[0]
-        } else if (typeof firstError === 'string') {
-          return firstError
+        const first = errorValues[0]
+        if (Array.isArray(first) && first.length > 0) {
+          return typeof first[0] === 'string' ? first[0] : String(first[0])
+        }
+        if (typeof first === 'string') return first
+        if (typeof first === 'object' && first !== null) {
+          const obj = first as Record<string, unknown>
+          if (typeof obj.msg === 'string') return obj.msg
+          if (typeof obj.message === 'string') return obj.message
         }
       }
     }

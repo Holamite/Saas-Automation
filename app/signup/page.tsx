@@ -9,26 +9,33 @@ import { OAuthButtons } from '@/components/auth/oauth-buttons'
 import { FormDivider } from '@/components/auth/form-divider'
 import { ErrorAlert } from '@/components/auth/error-alert'
 import { BrandHeader } from '@/components/auth/brand-header'
-import { Mail, Lock, User, Building } from 'lucide-react'
+import { Mail, Lock, User, Building, Check, Circle } from 'lucide-react'
 import { PasswordInput } from '@/components/ui/password-input'
-import { signup } from '@/lib/auth'
+import type { SignupData } from '@/lib/services/auth'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/auth-context'
 import { useOAuthHandler } from '@/hooks/use-oauth-handler'
 import { extractErrorMessage } from '@/lib/utils/error-handling'
+import {
+  validatePassword,
+  getPasswordRequirementMessages,
+  getPasswordRequirementStatus,
+} from '@/lib/validation/password'
 
-const MIN_PASSWORD_LENGTH = 8
+const PASSWORD_REQUIREMENT_KEYS = ['length', 'uppercase', 'lowercase', 'digit', 'special'] as const
 
 export default function Signup() {
   const router = useRouter()
-  const { isAuthenticated, isLoading, checkAuth, setUser } = useAuth()
+  const { isAuthenticated, isLoading, register } = useAuth()
   const { handleOAuth } = useOAuthHandler()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [businessName, setBusinessName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    businessName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
   const [isFormLoading, setIsFormLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -41,12 +48,13 @@ export default function Signup() {
   }, [isLoading, isAuthenticated, router])
 
   const validateForm = (): string | null => {
-    if (password !== confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       return 'Passwords do not match'
     }
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
+    const pwdResult = validatePassword(form.password)
+    if (!pwdResult.valid) {
+      return pwdResult.errors.join(' ')
     }
 
     return null
@@ -71,38 +79,18 @@ export default function Signup() {
     setIsFormLoading(true)
 
     try {
-      // Combine firstName and lastName into name field (backend contract)
-      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
-      
-      if (!fullName) {
-        setError('First name and last name are required')
-        toast({
-          title: 'Validation Error',
-          description: 'First name and last name are required',
-          variant: 'destructive',
-        })
-        setIsFormLoading(false)
-        return
+      const data: SignupData = {
+        firstname: form.firstName,
+        lastname: form.lastName,
+        email: form.email,
+        password: form.password,
+        businessName: form.businessName || undefined,
       }
-
-      const response = await signup({
-        name: fullName,
-        email,
-        password,
-        businessName: businessName.trim() || undefined,
-      })
-
-      // Use response message if available, otherwise use default
-      const successMessage = response.message || 'Account created successfully!'
-
-      // Store user data in sessionStorage for persistence
-      if (response.user) {
-        setUser(response.user)
-      }
+      await register(data)
 
       toast({
         title: 'Success',
-        description: successMessage,
+        description: 'Account created successfully!',
       })
 
       router.push('/dashboard')
@@ -160,8 +148,8 @@ export default function Signup() {
                     id="firstName"
                     type="text"
                     placeholder="Olamide"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    value={form.firstName}
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                     className="pl-10"
                     required
                     autoComplete="given-name"
@@ -178,8 +166,8 @@ export default function Signup() {
                     id="lastName"
                     type="text"
                     placeholder="Adebara"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    value={form.lastName}
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                     className="pl-10"
                     required
                     autoComplete="family-name"
@@ -198,8 +186,8 @@ export default function Signup() {
                   id="businessName"
                   type="text"
                   placeholder="Your business name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
+                  value={form.businessName}
+                  onChange={(e) => setForm({ ...form, businessName: e.target.value })}
                   className="pl-10"
                   autoComplete="organization"
                 />
@@ -216,8 +204,8 @@ export default function Signup() {
                   id="email"
                   type="email"
                   placeholder="you@example.ng"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="pl-10"
                   required
                   autoComplete="email"
@@ -235,14 +223,40 @@ export default function Signup() {
                 <PasswordInput
                   id="password"
                   placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="pl-10"
                   required
                   autoComplete="new-password"
-                  aria-describedby={error ? 'password-error' : undefined}
+                  aria-describedby={form.password ? 'password-requirements' : error ? 'password-error' : undefined}
                 />
               </div>
+              {form.password && (() => {
+                const status = getPasswordRequirementStatus(form.password)
+                const messages = getPasswordRequirementMessages()
+                return (
+                  <ul
+                    id="password-requirements"
+                    className="mt-2 space-y-1 text-xs text-muted-foreground"
+                    role="list"
+                    aria-live="polite"
+                  >
+                    {PASSWORD_REQUIREMENT_KEYS.map((key, i) => {
+                      const met = status[key]
+                      return (
+                        <li key={key} className="flex items-center gap-2">
+                          {met ? (
+                            <Check className="h-3.5 w-3.5 text-green-600 shrink-0" aria-hidden />
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" aria-hidden />
+                          )}
+                          <span className={met ? 'text-green-600' : ''}>{messages[i]}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )
+              })()}
             </div>
 
             <div>
@@ -254,8 +268,8 @@ export default function Signup() {
                 <PasswordInput
                   id="confirmPassword"
                   placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                   className="pl-10"
                   required
                   autoComplete="new-password"

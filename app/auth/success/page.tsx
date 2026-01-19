@@ -6,20 +6,14 @@ import { useAuth } from '@/contexts/auth-context'
 
 export default function AuthSuccess() {
   const router = useRouter()
-  const { checkAuth } = useAuth()
+  const { refreshSession } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const verifySession = async () => {
       try {
-        // Backend already validated cookies and set them
-        // Just verify session via checkAuth which handles cookie validation
-        await checkAuth()
-        
-        // Small delay to ensure state is updated
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 100)
+        await refreshSession()
+        setTimeout(() => router.push('/dashboard'), 100)
       } catch (err) {
         console.error('Session verification error:', err)
         setError('Failed to verify session. Please try again.')
@@ -28,7 +22,7 @@ export default function AuthSuccess() {
     }
 
     verifySession()
-  }, [router, checkAuth])
+  }, [router, refreshSession])
 
   if (error) {
     return (

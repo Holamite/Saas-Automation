@@ -1,5 +1,5 @@
 import { useToast } from '@/hooks/use-toast'
-import { initiateGoogleAuth } from '@/lib/auth'
+import { initiateGoogleAuth } from '@/lib/services/auth'
 
 /**
  * Hook to handle OAuth initiation with error handling

@@ -4,9 +4,10 @@ import type { NextRequest } from 'next/server'
 const BASE_URL = process.env.NEXT_PUBLIC_BASEURL || ''
 
 /**
- * Middleware to protect routes and handle authentication
+ * Proxy to protect routes and handle authentication.
+ * Replaces the deprecated middleware convention (Next.js 16+).
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require authentication
@@ -25,19 +26,15 @@ export async function middleware(request: NextRequest) {
   // If it's a protected route, check authentication
   if (isProtectedRoute) {
     try {
-      // Check if user is authenticated by verifying cookies
-      // We'll make a lightweight request to the backend
       const cookieHeader = request.headers.get('cookie') || ''
-      
+
       if (!cookieHeader) {
-        // No cookies, redirect to login
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(loginUrl)
       }
 
       // Verify cookies by attempting refresh
-      // Use API proxy route to avoid CORS issues
       const refreshUrl = `${request.nextUrl.origin}/api/auth/refresh`
       const response = await fetch(refreshUrl, {
         method: 'POST',
@@ -49,38 +46,25 @@ export async function middleware(request: NextRequest) {
       })
 
       if (!response.ok) {
-        // Refresh failed (401/403), cookies invalid - not authenticated
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(loginUrl)
       }
 
-      // Authenticated, allow access
       return NextResponse.next()
     } catch (error) {
-      // Error checking auth, redirect to login
-      console.error('Middleware auth check error:', error)
+      console.error('Proxy auth check error:', error)
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
   }
 
-  // For all other routes, allow access
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
-
