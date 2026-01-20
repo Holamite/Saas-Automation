@@ -1,9 +1,9 @@
 'use client'
 
-import { Bell, User, LogOut } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
-import { getUserDisplayName } from '@/lib/utils/user'
+import { getUserDisplayName, getUserInitials, getUserRole } from '@/lib/utils/user'
 
 interface TopBarProps {
   onLogout: () => void
@@ -11,7 +11,10 @@ interface TopBarProps {
 
 export function TopBar({ onLogout }: TopBarProps) {
   const { user } = useAuth()
-  const displayName = getUserDisplayName(user)
+  console.log('user', user)
+  const name = getUserDisplayName(user)
+  const role = getUserRole(user)
+  const avatar = getUserInitials(user)
 
   return (
     <header className="bg-card border-b border-border px-8 py-4 flex items-center justify-between">
@@ -31,11 +34,11 @@ export function TopBar({ onLogout }: TopBarProps) {
 
         <div className="flex items-center gap-3 pl-4 border-l border-border">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
+            {avatar}
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-foreground">{displayName}</p>
-            <p className="text-xs text-muted-foreground">Merchant</p>
+            <p className="text-sm font-medium text-foreground">{name}</p>
+            <p className="text-xs text-muted-foreground">{role}</p>
           </div>
         </div>
 

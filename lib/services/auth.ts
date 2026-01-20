@@ -28,7 +28,7 @@ export interface User {
   firstname: string
   lastname: string
   businessName?: string | null
-  role?: 'USER' | 'ADMIN'
+  role?: 'SUPERADMIN' | 'MERCHANT'
   createdAt?: string
   wallet?: {
     accountName: string
