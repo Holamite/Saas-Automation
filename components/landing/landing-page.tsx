@@ -11,16 +11,13 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
-  const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
-  const [showLeftArrow, setShowLeftArrow] = useState(false)
-  const [showRightArrow, setShowRightArrow] = useState(false)
 
   const plans = [
   {
     name: "Free",
     price: "₦0",
     period: "/month",
-    computationPower: "1,000 ops/month",
+    volumeCapacity: "1,000 vc/month",
     features: [
       "Up to 2 trading accounts",
       "50 orders per month",
@@ -30,23 +27,10 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
     ],
   },
   {
-    name: "Starter",
-    price: "₦4,999",
-    period: "/month",
-    computationPower: "10,000 ops/month",
-    features: [
-      "Up to 5 trading accounts",
-      "200 orders per month",
-      "Basic reporting",
-      "Email support",
-      "Single user access",
-    ],
-  },
-  {
     name: "Pro",
     price: "₦14,999",
     period: "/month",
-    computationPower: "50,000 ops/month",
+    volumeCapacity: "50,000 vc/month",
     features: [
       "Up to 10 trading accounts",
       "Unlimited orders",
@@ -57,26 +41,12 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
     ],
     current: true,
   },
-  {
-    name: "Premium",
-    price: "₦49,999",
-    period: "/month",
-    computationPower: "200,000 ops/month",
-    features: [
-      "Unlimited trading accounts",
-      "Unlimited orders",
-      "Advanced reporting & analytics",
-      "24/7 phone support",
-      "Unlimited team access",
-      "Custom API endpoints",
-      "Dedicated account manager",
-    ],
-  },
+
   {
     name: "Custom",
     price: "Contact",
     period: "/custom pricing",
-    computationPower: "Custom ops/month",
+    volumeCapacity: "Custom vc/month",
     features: [
       "White-label solution",
       "Enterprise support",
@@ -87,13 +57,6 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
   },
 ]
 
-  const handlePrevPlan = () => {
-    setCurrentPlanIndex((prev) => (prev === 0 ? Math.max(0, plans.length - 3) : prev - 1))
-  }
-
-  const handleNextPlan = () => {
-    setCurrentPlanIndex((prev) => (prev >= plans.length - 3 ? 0 : prev + 1))
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -275,19 +238,11 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
         <h3 className="text-xl font-semibold text-foreground mb-6">All Plans</h3>
         <div
           className="relative"
-          onMouseEnter={() => {
-            setShowLeftArrow(true)
-            setShowRightArrow(true)
-          }}
-          onMouseLeave={() => {
-            setShowLeftArrow(false)
-            setShowRightArrow(false)
-          }}
+          
         >
           <div className="overflow-hidden">
             <div
               className="flex gap-6 transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${currentPlanIndex * 34}%)` }}
             >
               {plans.map((plan) => (
                 <Card
@@ -308,7 +263,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
                   </div>
-                  <p className="text-sm text-primary font-semibold">{plan.computationPower}</p>
+                  <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
 
                   <Button
                     className={`w-full py-6 ${
@@ -334,24 +289,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
             </div>
           </div>
 
-          <button
-            onClick={handlePrevPlan}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-card border border-border rounded-full p-3 hover:bg-primary hover:border-primary transition-all shadow-lg ${
-              showLeftArrow ? "opacity-100" : "opacity-0"
-            }`}
-            aria-label="Previous plans"
-          >
-            <ChevronLeft className="w-6 h-6 text-foreground" />
-          </button>
-          <button
-            onClick={handleNextPlan}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-card border border-border rounded-full p-3 hover:bg-primary hover:border-primary transition-all shadow-lg ${
-              showRightArrow ? "opacity-100" : "opacity-0"
-            }`}
-            aria-label="Next plans"
-          >
-            <ChevronRight className="w-6 h-6 text-foreground" />
-          </button>
+         
         </div>
       </div>
       </section>

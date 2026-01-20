@@ -10,46 +10,30 @@ export function RequestMetricsCard() {
   const { user, isLoading } = useAuth()
 
   const metrics = useMemo(() => {
-    const volumeCapacity = user?.volumeCapacity
+  const volumeCapacity = user?.volumeCapacity
 
-    if (!volumeCapacity) {
-      return {
-        monthlyVC: 0,
-        usedVC: 0,
-        availableVC: 0,
-        usagePercentage: 0,
-        totalRequests: 0,
-        failedRequests: 0,
-        successfulRequests: 0,
-        successRate: 0,
-      }
-    }
+  const monthlyVC = Number(volumeCapacity?.monthlyVC ?? 0)
+  const usedVC = Number(volumeCapacity?.usedVC ?? 0)
+  const availableVC = Number(volumeCapacity?.availableVC ?? 0)
+  const usagePercentage = Number(volumeCapacity?.usagePercentage ?? 0)
 
-    const { monthlyVC, usedVC, availableVC, usagePercentage } = volumeCapacity
-    console.log('volumeCapacity', volumeCapacity)
-    console.log('monthlyVC', monthlyVC)
-    console.log('usedVC', usedVC)
-    console.log('availableVC', availableVC)
-    console.log('usagePercentage', usagePercentage)
-    
-    // Calculate request metrics based on volume capacity usage
-    // Assuming 1 VC = 1 request for simplicity
-    const totalRequests = usedVC
-    const successRate = totalRequests > 0 ? 98.5 : 0 // Industry standard success rate
-    const successfulRequests = Math.round(totalRequests * (successRate / 100))
-    const failedRequests = totalRequests - successfulRequests
+  const totalRequests = usedVC
+  const successRate = totalRequests > 0 ? 98.5 : 0
+  const successfulRequests = Math.round(totalRequests * (successRate / 100))
+  const failedRequests = totalRequests - successfulRequests
 
-    return {
-      monthlyVC,
-      usedVC,
-      availableVC,
-      usagePercentage: Math.min(Math.max(usagePercentage, 0), 100), // Clamp between 0-100
-      totalRequests,
-      failedRequests,
-      successfulRequests,
-      successRate,
-    }
-  }, [user?.volumeCapacity])
+  return {
+    monthlyVC,
+    usedVC,
+    availableVC,
+    usagePercentage: Math.min(Math.max(usagePercentage, 0), 100),
+    totalRequests,
+    failedRequests,
+    successfulRequests,
+    successRate,
+  }
+}, [user?.volumeCapacity])
+
 
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('en-US').format(num)

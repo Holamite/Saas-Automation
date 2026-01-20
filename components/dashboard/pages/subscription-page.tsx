@@ -10,7 +10,7 @@ const plans = [
     name: "Free",
     price: "₦0",
     period: "/month",
-    computationPower: "1,000 ops/month",
+    volumeCapacity: "1,000 vc/month",
     features: [
       "Up to 2 trading accounts",
       "50 orders per month",
@@ -20,23 +20,10 @@ const plans = [
     ],
   },
   {
-    name: "Starter",
-    price: "₦4,999",
-    period: "/month",
-    computationPower: "10,000 ops/month",
-    features: [
-      "Up to 5 trading accounts",
-      "200 orders per month",
-      "Basic reporting",
-      "Email support",
-      "Single user access",
-    ],
-  },
-  {
     name: "Pro",
     price: "₦14,999",
     period: "/month",
-    computationPower: "50,000 ops/month",
+    volumeCapacity: "50,000 vc/month",
     features: [
       "Up to 10 trading accounts",
       "Unlimited orders",
@@ -45,28 +32,14 @@ const plans = [
       "Team access (3 users)",
       "Custom webhooks",
     ],
-  },
-  {
-    name: "Premium",
-    price: "₦49,999",
-    period: "/month",
-    computationPower: "200,000 ops/month",
-    features: [
-      "Unlimited trading accounts",
-      "Unlimited orders",
-      "Advanced reporting & analytics",
-      "24/7 phone support",
-      "Unlimited team access",
-      "Custom API endpoints",
-      "Dedicated account manager",
-    ],
     current: true,
   },
+ 
   {
     name: "Custom",
     price: "Contact",
     period: "/custom pricing",
-    computationPower: "Custom ops/month",
+    volumeCapacity: "Custom vc/month",
     features: [
       "White-label solution",
       "Enterprise support",
@@ -78,25 +51,25 @@ const plans = [
 ]
 
 const topUpPackages = [
-  { name: "Starter Pack", ops: "5,000 ops", price: "₦999", valid: "7 days" },
-  { name: "Growth Pack", ops: "20,000 ops", price: "₦2,999", valid: "30 days" },
-  { name: "Pro Pack", ops: "50,000 ops", price: "₦6,999", valid: "30 days" },
-  { name: "Enterprise Pack", ops: "100,000 ops", price: "₦12,999", valid: "60 days" },
+  { name: "Starter Pack", vc: "5,000 vc", price: "₦999"},
+  { name: "Growth Pack", vc: "20,000 vc", price: "₦2,999"},
+  { name: "Pro Pack", vc: "50,000 vc", price: "₦6,999"},
+  { name: "Enterprise Pack", vc: "100,000 vc", price: "₦12,999"},
 ]
 
 export function SubscriptionPage() {
   const [showTopUp, setShowTopUp] = useState(false)
-  const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
-  const [showLeftArrow, setShowLeftArrow] = useState(false)
-  const [showRightArrow, setShowRightArrow] = useState(false)
+  // const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
+  // const [showLeftArrow, setShowLeftArrow] = useState(false)
+  // const [showRightArrow, setShowRightArrow] = useState(false)
 
-  const handlePrevPlan = () => {
-    setCurrentPlanIndex((prev) => (prev === 0 ? Math.max(0, plans.length - 3) : prev - 1))
-  }
+  // const handlePrevPlan = () => {
+  //   setCurrentPlanIndex((prev) => (prev === 0 ? Math.max(0, plans.length - 3) : prev - 1))
+  // }
 
-  const handleNextPlan = () => {
-    setCurrentPlanIndex((prev) => (prev >= plans.length - 3 ? 0 : prev + 1))
-  }
+  // const handleNextPlan = () => {
+  //   setCurrentPlanIndex((prev) => (prev >= plans.length - 3 ? 0 : prev + 1))
+  // }
 
   return (
     <div className="p-8 space-y-8">
@@ -113,7 +86,7 @@ export function SubscriptionPage() {
             <h2 className="text-3xl font-bold text-primary mb-2">Premium</h2>
             <p className="text-muted-foreground">Next billing: December 31, 2025</p>
             <p className="text-sm text-foreground mt-3">
-              <span className="font-semibold">Computation Power:</span> 180,000 / 200,000 ops used
+              <span className="font-semibold">Volume Capacity:</span> 180,000 / 200,000 vc used
             </p>
           </div>
           <div className="flex flex-col gap-2 mt-4 md:mt-0">
@@ -134,15 +107,14 @@ export function SubscriptionPage() {
         <Card className="bg-primary/5 border-primary/30 p-6">
           <div className="flex items-center gap-2 mb-6">
             <Zap className="w-5 h-5 text-primary" />
-            <h3 className="text-xl font-semibold text-foreground">Add Computation Power</h3>
+            <h3 className="text-xl font-semibold text-foreground">Add Volume Capacity</h3>
           </div>
-          <p className="text-muted-foreground mb-6">Extend your computation power before the month ends</p>
+          <p className="text-muted-foreground mb-6">Extend your volume capacity before the month ends</p>
           <div className="grid md:grid-cols-4 gap-4">
             {topUpPackages.map((pkg) => (
               <Card key={pkg.name} className="border-border bg-card p-4 hover:border-primary transition-colors">
                 <h4 className="font-semibold text-foreground mb-2">{pkg.name}</h4>
-                <p className="text-2xl font-bold text-primary mb-1">{pkg.ops}</p>
-                <p className="text-sm text-muted-foreground mb-3">Valid: {pkg.valid}</p>
+                <p className="text-2xl font-bold text-primary mb-1">{pkg.vc}</p>
                 <div className="mb-4">
                   <p className="text-primary font-bold">{pkg.price}</p>
                 </div>
@@ -157,20 +129,11 @@ export function SubscriptionPage() {
       <div>
         <h3 className="text-xl font-semibold text-foreground mb-6">All Plans</h3>
         <div
-          className="relative"
-          onMouseEnter={() => {
-            setShowLeftArrow(true)
-            setShowRightArrow(true)
-          }}
-          onMouseLeave={() => {
-            setShowLeftArrow(false)
-            setShowRightArrow(false)
-          }}
+          className="relative" 
         >
           <div className="overflow-hidden">
             <div
               className="flex gap-6 transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${currentPlanIndex * 34}%)` }}
             >
               {plans.map((plan) => (
                 <Card
@@ -191,7 +154,7 @@ export function SubscriptionPage() {
                     <span className="text-4xl font-bold text-foreground">{plan.price}</span>
                     <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
                   </div>
-                  <p className="text-sm text-primary font-semibold">{plan.computationPower}</p>
+                  <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
 
                   <Button
                     className={`w-full py-6 ${
@@ -217,24 +180,6 @@ export function SubscriptionPage() {
             </div>
           </div>
 
-          <button
-            onClick={handlePrevPlan}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-card border border-border rounded-full p-3 hover:bg-primary hover:border-primary transition-all shadow-lg ${
-              showLeftArrow ? "opacity-100" : "opacity-0"
-            }`}
-            aria-label="Previous plans"
-          >
-            <ChevronLeft className="w-6 h-6 text-foreground" />
-          </button>
-          <button
-            onClick={handleNextPlan}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-card border border-border rounded-full p-3 hover:bg-primary hover:border-primary transition-all shadow-lg ${
-              showRightArrow ? "opacity-100" : "opacity-0"
-            }`}
-            aria-label="Next plans"
-          >
-            <ChevronRight className="w-6 h-6 text-foreground" />
-          </button>
         </div>
       </div>
 
