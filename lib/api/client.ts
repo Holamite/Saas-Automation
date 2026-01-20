@@ -151,9 +151,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
           errorMessage = typeof d === 'string'
               ? d
               : typeof (d as Record<string, unknown>)?.msg === 'string'
-                ? (d as Record<string, unknown>).msg
+                ? (d as Record<string, unknown>).msg as string
                 : typeof (d as Record<string, unknown>)?.message === 'string'
-                  ? (d as Record<string, unknown>).message
+                  ? (d as Record<string, unknown>).message as string
                   : String(d)
         }
       } catch {
