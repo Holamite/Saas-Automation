@@ -1,9 +1,11 @@
 /**
- * Centralized API client for Doolf
- * - HTTP-only cookies; credentials: 'include' on all requests
+ * Centralized Axios client for Doolf
+ * - HTTP-only cookies; withCredentials: true on all requests
  * - Auto refresh on 401/403 with one retry of the original request
  * - Proxies /auth/* and /users/* to /api/auth/* and /api/users/*
  */
+
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 
 const USE_API_PROXY = true
 const BACKEND_URL = process.env.NEXT_PUBLIC_BASEURL || "http://localhost:3000"
@@ -34,20 +36,23 @@ export class AuthenticationError extends ApiClientError {
   }
 }
 
-interface RequestOptions extends RequestInit {
+interface RequestConfig extends InternalAxiosRequestConfig {
   skipAuth?: boolean
   skipRefresh?: boolean
+  _retry?: boolean
 }
 
 let refreshPromise: Promise<boolean> | null = null
 let isRefreshing = false
-const MAX_RETRY_ATTEMPTS = 1
 
-function createRequestId(url: string, options: RequestInit): string {
-  return `${url}:${options.method || 'GET'}:${JSON.stringify(options.body || '')}`
+function buildUrl(endpoint: string): string {
+  if (endpoint.startsWith('http')) return endpoint
+  if (USE_API_PROXY && (endpoint.startsWith('/auth/') || endpoint.startsWith('/users/')))
+    return `/api${endpoint}`
+  const base = (BACKEND_URL || '').replace(/\/+$/, '')
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+  return base ? `${base}${path}` : path
 }
-
-const requestRetryMap = new Map<string, number>()
 
 async function refreshAccessToken(): Promise<boolean> {
   if (isRefreshing && refreshPromise) return refreshPromise
@@ -56,14 +61,17 @@ async function refreshAccessToken(): Promise<boolean> {
   refreshPromise = (async () => {
     try {
       const url = USE_API_PROXY ? '/api/auth/refresh' : `${BACKEND_URL}/auth/refresh`
-      const res = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await axios.post(url, {}, { 
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       })
-      return res.ok
+      return response.status >= 200 && response.status < 300
     } catch (e) {
-      console.error('Token refresh failed:', e)
+      // 401 is expected when user is not logged in - don't log it
+      // Log other unexpected errors
+      if (axios.isAxiosError(e) && e.response?.status !== 401) {
+        console.error('Unexpected refresh error', e)
+      }
       return false
     } finally {
       isRefreshing = false
@@ -73,125 +81,139 @@ async function refreshAccessToken(): Promise<boolean> {
   return refreshPromise
 }
 
-function buildUrl(endpoint: string): string {
-  if (endpoint.startsWith('http')) return endpoint
-  if (USE_API_PROXY && (endpoint.startsWith('/auth/') || endpoint.startsWith('/users/')))
-    return `/api${endpoint}`
-  const base = (BACKEND_URL || '').replace(/\/$/, '')
-  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  return base ? `${base}${path}` : path
-}
-
-async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { skipAuth = false, skipRefresh = false, ...fetchOptions } = options
-  const url = buildUrl(endpoint)
-
-  const headers: Record<string, string> = {
+// Create axios instance
+const axiosInstance: AxiosInstance = axios.create({
+  withCredentials: true,
+  headers: {
     'Content-Type': 'application/json',
-    ...(fetchOptions.headers as Record<string, string>),
-  }
+  },
+})
 
-  const requestId = createRequestId(url, fetchOptions)
-  const retryCount = requestRetryMap.get(requestId) || 0
-
-  let response = await fetch(url, {
-    ...fetchOptions,
-    headers,
-    credentials: 'include',
-  })
-
-  const shouldRetry =
-    (response.status === 401 || response.status === 403) &&
-    !skipAuth &&
-    !skipRefresh &&
-    retryCount < MAX_RETRY_ATTEMPTS
-
-  if (shouldRetry) {
-    requestRetryMap.set(requestId, retryCount + 1)
-    const ok = await refreshAccessToken()
-    if (ok) {
-      response = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
-      if (response.status === 401 || response.status === 403) {
-        requestRetryMap.delete(requestId)
-        throw new AuthenticationError('Authentication failed after token refresh')
-      }
-    } else {
-      requestRetryMap.delete(requestId)
-      throw new AuthenticationError('Token refresh failed')
+// Request interceptor to transform URLs
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Only transform if not already prefixed (prevents /api/api/... on retry)
+    if (config.url && !config.url.startsWith('/api') && !config.url.startsWith('http')) {
+      config.url = buildUrl(config.url)
     }
-  } else if (response.status === 401) {
-    requestRetryMap.delete(requestId)
-    throw new AuthenticationError('Authentication required')
-  }
+    return config
+  },
+  (error: unknown) => Promise.reject(error)
+)
 
-  if (response.ok) requestRetryMap.delete(requestId)
+// Response interceptor to handle auth errors and retry
+axiosInstance.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RequestConfig
 
-  const contentType = response.headers.get('content-type')
-  const isJson = contentType?.includes('application/json')
+    if (!originalRequest) {
+      return Promise.reject(error)
+    }
 
-  if (!response.ok) {
-    let errorMessage = `Request failed with status ${response.status}`
+    // Don't retry if request is to refresh endpoint itself (prevent loops)
+    const isRefreshEndpoint = originalRequest.url?.includes('/auth/refresh')
+
+    const shouldRetry =
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403) &&
+      !originalRequest.skipAuth &&
+      !originalRequest.skipRefresh &&
+      !originalRequest._retry &&
+      !isRefreshEndpoint
+
+    if (shouldRetry) {
+      originalRequest._retry = true
+      const ok = await refreshAccessToken()
+      
+      if (ok) {
+        return axiosInstance(originalRequest)
+      }
+      // If refresh failed, return the original error without throwing
+      // 401 is expected when user is not logged in - handle silently
+      return Promise.reject(error)
+    }
+
+    // Only throw AuthenticationError for 401s that weren't skipped or refresh endpoint
+    if (
+      error.response?.status === 401 &&
+      !originalRequest.skipAuth &&
+      !isRefreshEndpoint
+    ) {
+      throw new AuthenticationError('Authentication required')
+    }
+
+    // Transform error to ApiClientError
+    let errorMessage = `Request failed with status ${error.response?.status || 'unknown'}`
     let errors: Record<string, string[]> | undefined
 
-    if (isJson) {
-      try {
-        const data = (await response.json()) as Record<string, unknown>
-        errors = data.errors as Record<string, string[]> | undefined
-        if (Array.isArray(data.message) && data.message.length > 0) {
-          const first = data.message[0]
-          errorMessage = typeof first === 'string' ? first : String(first)
-        } else if (typeof data.message === 'string' && data.message) {
-          errorMessage = data.message
-        } else if (typeof data.error === 'string' && data.error) {
-          errorMessage = data.error
-        } else if (typeof data.detail === 'string' && data.detail) {
-          errorMessage = data.detail
-        } else if (Array.isArray(data.detail) && data.detail.length > 0) {
-          const d = data.detail[0] as Record<string, unknown> | string
-          errorMessage = typeof d === 'string'
-              ? d
-              : typeof (d as Record<string, unknown>)?.msg === 'string'
-                ? (d as Record<string, unknown>).msg as string
-                : typeof (d as Record<string, unknown>)?.message === 'string'
-                  ? (d as Record<string, unknown>).message as string
-                  : String(d)
-        }
-      } catch {
-        // ignore
+    if (error.response?.data) {
+      const data = error.response.data as Record<string, unknown>
+      errors = data.errors as Record<string, string[]> | undefined
+      
+      if (Array.isArray(data.message) && data.message.length > 0) {
+        const first = data.message[0]
+        errorMessage = typeof first === 'string' ? first : String(first)
+      } else if (typeof data.message === 'string' && data.message) {
+        errorMessage = data.message
+      } else if (typeof data.error === 'string' && data.error) {
+        errorMessage = data.error
+      } else if (typeof data.detail === 'string' && data.detail) {
+        errorMessage = data.detail
+      } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+        const d = data.detail[0] as Record<string, unknown> | string
+        errorMessage = typeof d === 'string'
+            ? d
+            : typeof (d as Record<string, unknown>)?.msg === 'string'
+              ? (d as Record<string, unknown>).msg as string
+              : typeof (d as Record<string, unknown>)?.message === 'string'
+                ? (d as Record<string, unknown>).message as string
+                : String(d)
       }
     }
-    throw new ApiClientError(errorMessage, response.status, errors)
-  }
 
-  if (isJson) return response.json() as Promise<T>
-  return response.text() as unknown as T
+    throw new ApiClientError(errorMessage, error.response?.status, errors)
+  }
+)
+
+interface RequestOptions {
+  skipAuth?: boolean
+  skipRefresh?: boolean
 }
 
 export const api = {
-  get: <T>(endpoint: string, options?: RequestOptions) =>
-    request<T>(endpoint, { ...options, method: 'GET' }),
+  get: async <T>(endpoint: string, options?: RequestOptions): Promise<T> => {
+    const response = await axiosInstance.get<T>(endpoint, {
+      ...(options ?? {}),
+    } as RequestConfig)
+    return response.data
+  },
 
-  post: <T>(endpoint: string, data?: unknown, options?: RequestOptions) =>
-    request<T>(endpoint, {
-      ...options,
-      method: 'POST',
-      body: data != null ? JSON.stringify(data) : undefined,
-    }),
+  post: async <T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> => {
+    const response = await axiosInstance.post<T>(endpoint, data, {
+      ...(options ?? {}),
+    } as RequestConfig)
+    return response.data
+  },
 
-  put: <T>(endpoint: string, data?: unknown, options?: RequestOptions) =>
-    request<T>(endpoint, {
-      ...options,
-      method: 'PUT',
-      body: data != null ? JSON.stringify(data) : undefined,
-    }),
+  put: async <T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> => {
+    const response = await axiosInstance.put<T>(endpoint, data, {
+      ...(options ?? {}),
+    } as RequestConfig)
+    return response.data
+  },
 
-  patch: <T>(endpoint: string, data?: unknown, options?: RequestOptions) =>
-    request<T>(endpoint, {
-      ...options,
-      method: 'PATCH',
-      body: data != null ? JSON.stringify(data) : undefined,
-    }),
+  patch: async <T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> => {
+    const response = await axiosInstance.patch<T>(endpoint, data, {
+      ...(options ?? {}),
+    } as RequestConfig)
+    return response.data
+  },
 
-  delete: <T>(endpoint: string, options?: RequestOptions) =>
-    request<T>(endpoint, { ...options, method: 'DELETE' }),
+  delete: async <T>(endpoint: string, options?: RequestOptions): Promise<T> => {
+    const response = await axiosInstance.delete<T>(endpoint, {
+      ...(options ?? {}),
+    } as RequestConfig)
+    return response.data
+  },
 }

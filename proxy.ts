@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASEURL || ''
+import axios from 'axios'
 
 /**
  * Proxy to protect routes and handle authentication.
@@ -36,16 +35,16 @@ export async function proxy(request: NextRequest) {
 
       // Verify cookies by attempting refresh
       const refreshUrl = `${request.nextUrl.origin}/api/auth/refresh`
-      const response = await fetch(refreshUrl, {
-        method: 'POST',
+      const response = await axios.post(refreshUrl, {}, {
         headers: {
           Cookie: cookieHeader,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        withCredentials: true,
+        validateStatus: () => true, // Don't throw on non-2xx status
       })
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(loginUrl)
