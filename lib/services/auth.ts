@@ -88,31 +88,25 @@ export async function getCurrentUser(): Promise<User> {
 }
 
 export async function register(data: SignupData): Promise<RegisterResponse> {
-  try {
-    return await api.post<RegisterResponse>(
-      '/auth/register',
-      {
-        firstname: data.firstname,
-        lastname: data.lastname,
-        email: data.email,
-        password: data.password,
-        ...(data.businessName != null && data.businessName !== '' ? { businessName: data.businessName } : {}),
-      },
-      { skipRefresh: true }
-    )
-  } catch (e) {
-    if (e instanceof ApiClientError) throw e
-    throw new ApiClientError('Registration failed. Please try again.', 500)
-  }
+  return api.post<RegisterResponse>(
+    '/auth/register',
+    {
+      firstname: data.firstname,
+      lastname: data.lastname,
+      email: data.email,
+      password: data.password,
+      ...(data.businessName != null && data.businessName !== '' ? { businessName: data.businessName } : {}),
+    },
+    { skipRefresh: true }
+  )
 }
 
 export async function login(data: LoginData): Promise<LoginResponse> {
-  try {
-    return await api.post<LoginResponse>('/auth/login', { email: data.email, password: data.password }, { skipRefresh: true })
-  } catch (e) {
-    if (e instanceof ApiClientError) throw e
-    throw new ApiClientError('Login failed. Please try again.', 500)
-  }
+  return api.post<LoginResponse>(
+    '/auth/login',
+    { email: data.email, password: data.password },
+    { skipRefresh: true }
+  )
 }
 
 export async function logout(): Promise<void> {
