@@ -16,12 +16,25 @@ if (!BACKEND_URL && !USE_API_PROXY) {
 
 export class ApiClientError extends Error {
   status?: number
+  title?: string
+  details?: string[] | string
+  path?: string
   errors?: Record<string, string[]>
 
-  constructor(message: string, status?: number, errors?: Record<string, string[]>) {
+  constructor(
+    message: string,
+    status?: number,
+    title?: string,
+    details?: string[] | string,
+    path?: string,
+    errors?: Record<string, string[]>
+  ) {
     super(message)
     this.name = 'ApiClientError'
     this.status = status
+    this.title = title
+    this.details = details
+    this.path = path
     this.errors = errors
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ApiClientError)
@@ -30,8 +43,8 @@ export class ApiClientError extends Error {
 }
 
 export class AuthenticationError extends ApiClientError {
-  constructor(message = 'Authentication failed') {
-    super(message, 401)
+  constructor(message = 'Authentication failed', title?: string, details?: string[] | string, path?: string) {
+    super(message, 401, title, details, path)
     this.name = 'AuthenticationError'
   }
 }
@@ -140,39 +153,38 @@ axiosInstance.interceptors.response.use(
       !originalRequest.skipAuth &&
       !isRefreshEndpoint
     ) {
-      throw new AuthenticationError('Authentication required')
-    }
-
-    // Transform error to ApiClientError
-    let errorMessage = `Request failed with status ${error.response?.status || 'unknown'}`
-    let errors: Record<string, string[]> | undefined
-
-    if (error.response?.data) {
-      const data = error.response.data as Record<string, unknown>
-      errors = data.errors as Record<string, string[]> | undefined
+      const data = error.response?.data as Record<string, unknown> | undefined
+      const message = typeof data?.message === 'string' ? data.message : 'Authentication required'
+      const title = typeof data?.title === 'string' ? data.title : undefined
+      const path = typeof data?.path === 'string' ? data.path : undefined
       
-      if (Array.isArray(data.message) && data.message.length > 0) {
-        const first = data.message[0]
-        errorMessage = typeof first === 'string' ? first : String(first)
-      } else if (typeof data.message === 'string' && data.message) {
-        errorMessage = data.message
-      } else if (typeof data.error === 'string' && data.error) {
-        errorMessage = data.error
-      } else if (typeof data.detail === 'string' && data.detail) {
-        errorMessage = data.detail
-      } else if (Array.isArray(data.detail) && data.detail.length > 0) {
-        const d = data.detail[0] as Record<string, unknown> | string
-        errorMessage = typeof d === 'string'
-            ? d
-            : typeof (d as Record<string, unknown>)?.msg === 'string'
-              ? (d as Record<string, unknown>).msg as string
-              : typeof (d as Record<string, unknown>)?.message === 'string'
-                ? (d as Record<string, unknown>).message as string
-                : String(d)
+      let details: string[] | string | undefined
+      if (Array.isArray(data?.details)) {
+        details = data.details as string[]
+      } else if (typeof data?.details === 'string') {
+        details = data.details
       }
+      
+      throw new AuthenticationError(message, title, details, path)
     }
 
-    throw new ApiClientError(errorMessage, error.response?.status, errors)
+    // Preserve backend error structure exactly
+    const data = error.response?.data as Record<string, unknown> | undefined
+    const status = error.response?.status
+    const title = typeof data?.title === 'string' ? data.title : undefined
+    const message = typeof data?.message === 'string' ? data.message : `Request failed with status ${status || 'unknown'}`
+    const path = typeof data?.path === 'string' ? data.path : undefined
+    const errors = data?.errors as Record<string, string[]> | undefined
+    
+    // Preserve details as-is (array or string)
+    let details: string[] | string | undefined
+    if (Array.isArray(data?.details)) {
+      details = data.details as string[]
+    } else if (typeof data?.details === 'string') {
+      details = data.details
+    }
+
+    throw new ApiClientError(message, status, title, details, path, errors)
   }
 )
 

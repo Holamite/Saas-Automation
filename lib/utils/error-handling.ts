@@ -6,7 +6,17 @@ import { ApiClientError } from '@/lib/api'
  */
 export function extractErrorMessage(error: unknown, defaultMessage: string): string {
   if (error instanceof ApiClientError) {
-    // Prefer field-level validation errors (e.g. { password: ["Must include special char"] })
+    // Prefer backend details array (e.g. ["Password must contain 8 characters..."])
+    if (Array.isArray(error.details) && error.details.length > 0) {
+      return error.details[0]
+    }
+    
+    // Use backend message if available
+    if (error.message && !error.message.startsWith('Request failed with status')) {
+      return error.message
+    }
+    
+    // Fall back to field-level validation errors (e.g. { password: ["Must include special char"] })
     if (error.errors && typeof error.errors === 'object') {
       const errorValues = Array.isArray(error.errors) ? error.errors : Object.values(error.errors)
       if (errorValues.length > 0) {
@@ -22,7 +32,8 @@ export function extractErrorMessage(error: unknown, defaultMessage: string): str
         }
       }
     }
-    return error.message
+    
+    return error.message || defaultMessage
   }
 
   if (error instanceof Error) {
@@ -37,12 +48,40 @@ export function extractErrorMessage(error: unknown, defaultMessage: string): str
  */
 export function extractAuthErrorMessage(error: unknown, defaultMessage: string): string {
   if (error instanceof ApiClientError) {
-    if (error.status === 401) {
-      return 'Invalid email or password'
-    }
+    // Use backend message for 401 errors (e.g. "Invalid credentials")
+    // This preserves the exact backend error message
     return extractErrorMessage(error, defaultMessage)
   }
 
   return extractErrorMessage(error, defaultMessage)
+}
+
+/**
+ * Extract all error details from ApiClientError
+ * Useful for displaying multiple validation errors
+ */
+export function extractErrorDetails(error: unknown): string[] {
+  if (error instanceof ApiClientError) {
+    // Return all details if available
+    if (Array.isArray(error.details)) {
+      return error.details
+    }
+    
+    // Return single detail as array
+    if (typeof error.details === 'string') {
+      return [error.details]
+    }
+    
+    // Fall back to message
+    if (error.message) {
+      return [error.message]
+    }
+  }
+
+  if (error instanceof Error) {
+    return [error.message]
+  }
+
+  return []
 }
 
