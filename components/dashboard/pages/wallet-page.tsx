@@ -18,6 +18,9 @@ import {
   WithdrawModal,
 } from "@/components/dashboard/walletInfo/utils"
 import type { AddAccountForm, LinkedAccount, WalletTransaction } from "@/components/dashboard/walletInfo/utils"
+import { useWalletInfo, useWalletBalance, useCreateWallet } from "@/hooks/use-wallet-query"
+import { ApiClientError } from "@/lib/api/client"
+import { Loading } from "@/components/ui/loading"
 
 const INITIAL_LINKED_ACCOUNTS: LinkedAccount[] = [
   { id: 1, name: "Adebara Olamide", bank: "GT BANK", number: "0123456789", active: true, verified: true },
@@ -50,11 +53,15 @@ const MOCK_TRANSACTIONS: WalletTransaction[] = [
 
 export function WalletPage() {
   const { toast } = useToast()
+  
+  // React Query hooks for wallet data
+  const { data: walletInfo, isLoading: isLoadingInfo, error: walletError } = useWalletInfo()
+  const { data: walletBalance, isLoading: isLoadingBalance } = useWalletBalance()
+  const createWalletMutation = useCreateWallet()
+  
   const [activeModal, setActiveModal] = useState<
     "send" | "set-transfer-pin" | "withdraw" | "bvn-verification" | "add-account" | null
   >(null)
-  const [loading, setLoading] = useState(false)
-  const [hasLinkedAccounts, setHasLinkedAccounts] = useState(true)
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>(INITIAL_LINKED_ACCOUNTS)
   const [editingAccount, setEditingAccount] = useState<LinkedAccount | null>(null)
   const [newAccountForm, setNewAccountForm] = useState<AddAccountForm>({
@@ -64,17 +71,52 @@ export function WalletPage() {
   })
   const [selectedBank, setSelectedBank] = useState("")
 
+  // Derived state
+  const isLoadingWallet = isLoadingInfo || isLoadingBalance
+
+  // Show BVN modal if wallet doesn't exist (404 error)
   useEffect(() => {
-    if (!hasLinkedAccounts) setActiveModal("bvn-verification")
-  }, [hasLinkedAccounts])
+    if (walletError && walletError instanceof Error) {
+      const apiError = walletError as ApiClientError
+      if (apiError.status === 404) {
+        setActiveModal("bvn-verification")
+      }
+    }
+  }, [walletError])
+
+  const handleCreateWallet = (bvn: string, bvnDateOfBirth: string) => {
+    createWalletMutation.mutate(
+      { bvn, bvnDateOfBirth },
+      {
+        onSuccess: () => {
+          toast({ 
+            title: "Success", 
+            description: "Wallet created successfully! Your virtual account is now active." 
+          })
+          setActiveModal(null)
+        },
+        onError: (error) => {
+          if (error instanceof ApiClientError) {
+            toast({
+              title: error.title || "Error",
+              description: error.message || "Failed to create wallet. Please try again.",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: "An unexpected error occurred. Please try again.",
+              variant: "destructive",
+            })
+          }
+        },
+      }
+    )
+  }
 
   const handleAction = (type: string) => {
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      setActiveModal(null)
-      toast({ title: "Success", description: `${type} request processed successfully.` })
-    }, 1500)
+    toast({ title: "Success", description: `${type} request processed successfully.` })
+    setActiveModal(null)
   }
 
   const copyToClipboard = (text: string, label: string) => {
@@ -135,6 +177,10 @@ export function WalletPage() {
     setActiveModal("add-account")
   }
 
+  if (isLoadingWallet) {
+    return <Loading message="Loading wallet..." />
+  }
+
   return (
     <TooltipProvider>
       <div
@@ -158,10 +204,16 @@ export function WalletPage() {
 
         <div className="gap-6">
           <WalletBalanceCard
-            balance="₦24,850,200.00"
-            accountNumber="8293019284"
-            bankName="Monnify Microfinance Bank"
-            accountName="DOLF / Adebara Olamide"
+            balance={
+              isLoadingWallet 
+                ? "Loading..." 
+                : walletBalance 
+                  ? `₦${walletBalance.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : "₦0.00"
+            }
+            accountNumber={walletInfo?.accountNumber || "N/A"}
+            bankName={walletInfo?.bankName || "Monnify Microfinance Bank"}
+            accountName={walletInfo?.accountName || "N/A"}
             dailyLimit="₦5,000,000"
             onCopy={copyToClipboard}
           />
@@ -189,30 +241,27 @@ export function WalletPage() {
         <SendFundsModal
           open={activeModal === "send"}
           onOpenChange={(o) => setActiveModal(o ? "send" : null)}
-          loading={loading}
+          loading={false}
           onConfirm={() => handleAction("Transfer")}
           onCancel={() => setActiveModal(null)}
         />
         <TransferPinModal
           open={activeModal === "set-transfer-pin"}
           onOpenChange={(o) => setActiveModal(o ? "set-transfer-pin" : null)}
-          loading={loading}
+          loading={false}
           onSave={() => handleAction("Security PIN set")}
         />
         <WithdrawModal
           open={activeModal === "withdraw"}
           onOpenChange={(o) => setActiveModal(o ? "withdraw" : null)}
-          loading={loading}
+          loading={false}
           onSubmit={() => handleAction("Withdrawal")}
         />
         <BvnVerificationModal
           open={activeModal === "bvn-verification"}
           onOpenChange={(o) => setActiveModal(o ? "bvn-verification" : null)}
-          loading={loading}
-          onComplete={() => {
-            handleAction("BVN Verification")
-            setHasLinkedAccounts(true)
-          }}
+          loading={createWalletMutation.isPending}
+          onComplete={handleCreateWallet}
           onCancel={() => setActiveModal(null)}
         />
         <AddAccountModal
@@ -221,7 +270,7 @@ export function WalletPage() {
           form={newAccountForm}
           selectedBank={selectedBank}
           editingAccount={editingAccount}
-          loading={loading}
+          loading={false}
           onFormChange={setNewAccountForm}
           onSelectedBankChange={setSelectedBank}
           onSave={handleAddAccount}

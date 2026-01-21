@@ -22,4 +22,3 @@ export function useOAuthHandler() {
 
   return { handleOAuth }
 }
-

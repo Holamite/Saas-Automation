@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Info, Shield, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +20,7 @@ interface BvnVerificationModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   loading: boolean
-  onComplete: () => void
+  onComplete: (bvn: string, bvnDateOfBirth: string) => void
   onCancel: () => void
 }
 
@@ -30,6 +31,38 @@ export function BvnVerificationModal({
   onComplete,
   onCancel,
 }: BvnVerificationModalProps) {
+  const [bvn, setBvn] = useState("")
+  const [dateOfBirth, setDateOfBirth] = useState("")
+  const [errors, setErrors] = useState<{ bvn?: string; dob?: string }>({})
+
+  const validate = () => {
+    const newErrors: { bvn?: string; dob?: string } = {}
+    
+    if (!bvn || bvn.length !== 11) {
+      newErrors.bvn = "BVN must be exactly 11 digits"
+    }
+    
+    if (!dateOfBirth) {
+      newErrors.dob = "Date of birth is required"
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleComplete = () => {
+    if (validate()) {
+      onComplete(bvn, dateOfBirth)
+    }
+  }
+
+  const handleCancel = () => {
+    setBvn("")
+    setDateOfBirth("")
+    setErrors({})
+    onCancel()
+  }
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onOpenChange(false)}>
       <DialogOverlay className="bg-black/50 cursor-pointer transition-opacity data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
@@ -69,8 +102,20 @@ export function BvnVerificationModal({
               placeholder="00000000000"
               maxLength={11}
               className="bg-background border-border h-12 text-sm font-mono tracking-wider"
-              type="Number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={bvn}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '')
+                setBvn(value)
+                if (errors.bvn) setErrors({ ...errors, bvn: undefined })
+              }}
+              disabled={loading}
             />
+            {errors.bvn && (
+              <p className="text-xs text-destructive font-medium">{errors.bvn}</p>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -85,7 +130,20 @@ export function BvnVerificationModal({
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <Input placeholder="DD/MM/YYYY" className="bg-background border-border h-12 text-sm" type="date" />
+            <Input 
+              placeholder="YYYY-MM-DD" 
+              className="bg-background border-border h-12 text-sm" 
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => {
+                setDateOfBirth(e.target.value)
+                if (errors.dob) setErrors({ ...errors, dob: undefined })
+              }}
+              disabled={loading}
+            />
+            {errors.dob && (
+              <p className="text-xs text-destructive font-medium">{errors.dob}</p>
+            )}
           </div>
 
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-2">
@@ -112,12 +170,18 @@ export function BvnVerificationModal({
         </div>
 
         <DialogFooter className="p-6 bg-muted/10 border-t border-border/50 gap-3">
-          <Button variant="ghost" className="text-xs font-black uppercase tracking-widest h-11" onClick={onCancel}>
+          <Button 
+            variant="ghost" 
+            className="text-xs font-black uppercase tracking-widest h-11" 
+            onClick={handleCancel}
+            disabled={loading}
+          >
             Cancel
           </Button>
           <Button
             className="flex-1 bg-primary text-black font-black uppercase tracking-widest h-11 shadow-lg shadow-primary/20"
-            onClick={onComplete}
+            onClick={handleComplete}
+            disabled={loading}
           >
             {loading ? "Verifying..." : "Complete Verification"}
           </Button>

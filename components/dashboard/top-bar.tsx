@@ -4,6 +4,8 @@ import { Bell, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
 import { getUserDisplayName, getUserInitials, getUserRole } from '@/lib/utils/user'
+import { Switch } from '../ui/switch'
+// import { ThemeToggleButton } from '@/components/ui/theme-toggle-button'
 
 interface TopBarProps {
   onLogout: () => void
@@ -23,13 +25,10 @@ export function TopBar({ onLogout }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button
-          className="relative p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-secondary rounded-lg transition"
-          aria-label="Notifications"
-        >
-          <Bell className="w-5 h-5" aria-hidden="true" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" aria-hidden="true"></span>
-        </button>
+        <div className="flex items-center justify-center gap-2 sm:flex-col">
+          <Switch defaultChecked className="data-[state=checked]:bg-primary cursor-pointer  h-4 w-6 [&>span]:h-3 [&>span]:w-3" />
+          <span className="text-muted-foreground text-xs">Automation</span>
+        </div>
 
         <div className="flex items-center gap-3 pl-4 border-l border-border">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">

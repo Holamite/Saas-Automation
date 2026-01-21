@@ -33,7 +33,7 @@ export function SetupOverlay({
     >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in" />
-        <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none">
+        <Dialog.Content onClick={() => onSkip()}  className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none cursor-pointer">
           <div className="w-full max-w-2xl">
             <div className="relative rounded-2xl border border-primary/20 shadow-2xl overflow-hidden bg-linear-to-br from-card via-card/80 to-card/60 p-8 animate-in zoom-in-95">
               <div className="mb-6">

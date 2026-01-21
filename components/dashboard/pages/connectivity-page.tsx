@@ -7,7 +7,7 @@ import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { addBybitKey, removeBybitKey, getBybitKeyStatus } from "@/lib/services/bybit.service"
+import { useBybitKeyStatus, useAddBybitKey, useRemoveBybitKey } from "@/hooks/use-bybit-query"
 import { ApiClientError } from "@/lib/api/client"
 
 const supportedBanks = [
@@ -22,32 +22,19 @@ export function ConnectivityPage() {
   const [selectedBank, setSelectedBank] = useState<string>("")
   const { toast } = useToast()
   
+  // React Query hooks for Bybit
+  const { data: bybitStatus, isLoading: isCheckingStatus } = useBybitKeyStatus()
+  const addKeyMutation = useAddBybitKey()
+  const removeKeyMutation = useRemoveBybitKey()
+  
   // Bybit state
   const [bybitApiKey, setBybitApiKey] = useState("")
   const [bybitApiSecret, setBybitApiSecret] = useState("")
-  const [isConnected, setIsConnected] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
+  
+  // Derived state
+  const isConnected = bybitStatus?.hasKey ?? false
 
-  // Fetch connection status from backend on mount
-  useEffect(() => {
-    const fetchConnectionStatus = async () => {
-      try {
-        const status = await getBybitKeyStatus()
-        setIsConnected(status.hasKey)
-      } catch (error) {
-        // If error, assume not connected
-        setIsConnected(false)
-      } finally {
-        setIsCheckingStatus(false)
-      }
-    }
-
-    fetchConnectionStatus()
-  }, [])
-
-  const handleAddBybitKey = async () => {
+  const handleAddBybitKey = () => {
     if (!bybitApiKey.trim() || !bybitApiSecret.trim()) {
       toast({
         title: "Validation Error",
@@ -57,76 +44,69 @@ export function ConnectivityPage() {
       return
     }
 
-    setIsLoading(true)
-    try {
-      const response = await addBybitKey({
+    addKeyMutation.mutate(
+      {
         apiKey: bybitApiKey.trim(),
         apiSecret: bybitApiSecret.trim(),
-      })
-
-      toast({
-        title: "Success",
-        description: response.message || "Bybit API key added successfully",
-      })
-
-      // Update connection status
-      setIsConnected(true)
-      
-      // Clear the input fields for security
-      setBybitApiKey("")
-      setBybitApiSecret("")
-    } catch (error) {
-      if (error instanceof ApiClientError) {
-        toast({
-          title: error.title || "Error",
-          description: error.message || "Failed to add Bybit API key",
-          variant: "destructive",
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive",
-        })
+      },
+      {
+        onSuccess: (response) => {
+          toast({
+            title: "Success",
+            description: response.message || "Bybit API key added successfully",
+          })
+          
+          // Clear the input fields for security
+          setBybitApiKey("")
+          setBybitApiSecret("")
+        },
+        onError: (error) => {
+          if (error instanceof ApiClientError) {
+            toast({
+              title: error.title || "Error",
+              description: error.message || "Failed to add Bybit API key",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: "An unexpected error occurred",
+              variant: "destructive",
+            })
+          }
+        },
       }
-    } finally {
-      setIsLoading(false)
-    }
+    )
   }
 
-  const handleRemoveBybitKey = async () => {
-    setIsDeleting(true)
-    try {
-      const response = await removeBybitKey()
-
-      toast({
-        title: "Success",
-        description: response.message || "Bybit API key removed successfully",
-      })
-
-      // Update connection status
-      setIsConnected(false)
-      
-      // Clear the input fields
-      setBybitApiKey("")
-      setBybitApiSecret("")
-    } catch (error) {
-      if (error instanceof ApiClientError) {
+  const handleRemoveBybitKey = () => {
+    removeKeyMutation.mutate(undefined, {
+      onSuccess: (response) => {
         toast({
-          title: error.title || "Error",
-          description: error.message || "Failed to remove Bybit API key",
-          variant: "destructive",
+          title: "Success",
+          description: response.message || "Bybit API key removed successfully",
         })
-      } else {
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive",
-        })
-      }
-    } finally {
-      setIsDeleting(false)
-    }
+        
+        // Clear the input fields
+        setBybitApiKey("")
+        setBybitApiSecret("")
+      },
+      onError: (error) => {
+        if (error instanceof ApiClientError) {
+          toast({
+            title: error.title || "Error",
+            description: error.message || "Failed to remove Bybit API key",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: "An unexpected error occurred",
+            variant: "destructive",
+          })
+        }
+      },
+    })
   }
 
   return (
@@ -169,7 +149,7 @@ export function ConnectivityPage() {
               type="password" 
               value={bybitApiKey}
               onChange={(e) => setBybitApiKey(e.target.value)}
-              disabled={isLoading || isDeleting}
+              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
             />
           </div>
           <div>
@@ -179,16 +159,16 @@ export function ConnectivityPage() {
               type="password"
               value={bybitApiSecret}
               onChange={(e) => setBybitApiSecret(e.target.value)}
-              disabled={isLoading || isDeleting}
+              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
             />
           </div>
           <div className="flex gap-2">
             <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={handleAddBybitKey}
-              disabled={isLoading || isDeleting}
+              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
             >
-              {isLoading ? (
+              {addKeyMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Connecting...
@@ -201,9 +181,9 @@ export function ConnectivityPage() {
               <Button 
                 variant="ghost"
                 onClick={handleRemoveBybitKey}
-                disabled={isLoading || isDeleting}
+                disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
               >
-                {isDeleting ? (
+                {removeKeyMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Removing...

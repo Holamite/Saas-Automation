@@ -2,9 +2,10 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, Zap, ChevronLeft, ChevronRight } from "lucide-react"
-import { useState } from "react"
+import { Check, Zap} from "lucide-react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { Loading } from "@/components/ui/loading"
 
 const plans = [
   {
@@ -60,7 +61,13 @@ const topUpPackages = [
 export function SubscriptionPage() {
   const [showTopUp, setShowTopUp] = useState(false)
   const { user } = useAuth()
-  
+  const [loading, setLoading] = useState<boolean | undefined>(true)
+
+   useEffect(() => {
+    if (user?.subscription) {
+      setLoading(false)
+    }
+  }, [user])
   // Extract subscription data from user
   const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
   const nextBillingDate = user?.subscription?.nextBillingDate 
@@ -75,6 +82,17 @@ export function SubscriptionPage() {
   const usedVC = user?.volumeCapacity?.usedVC || 0
   const monthlyVC = user?.volumeCapacity?.monthlyVC || 0
   const usagePercentage = user?.volumeCapacity?.usagePercentage || 0
+
+ 
+  if (loading) {
+      return (
+        <div className="p-8 space-y-8">
+          <div className="flex justify-center items-center h-full">
+            <Loading message="Loading subscription..." />
+          </div>
+        </div>
+      )
+  }
 
   return (
     <div className="p-8 space-y-8">

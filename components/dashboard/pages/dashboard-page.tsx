@@ -12,7 +12,9 @@ import {
   RequestMetricsCard,
   SetupOverlay,
 } from "@/components/dashboard/dashboardInfo"
-import { getBybitKeyStatus } from "@/lib/services/bybit.service"
+import { useWalletInfo } from "@/hooks/use-wallet-query"
+import { useBybitKeyStatus } from "@/hooks/use-bybit-query"
+import { Loading } from "@/components/ui/loading"
 
 // TODO: Replace with API call to fetch orders
 // Example: const { data: orders, isLoading, error } = useOrders()
@@ -51,101 +53,51 @@ const MOCK_ORDERS = [
 
 export function DashboardPage() {
   const { user } = useAuth()
-  const [walletSetup, setWalletSetup] = useState<boolean>(false)
-  const [bybitConnected, setBybitConnected] = useState<boolean>(false)
+  
+  // React Query hooks for setup status
+  const { data: walletInfo, isLoading: isLoadingWallet } = useWalletInfo()
+  const { data: bybitStatus, isLoading: isLoadingBybit } = useBybitKeyStatus()
+  
   const [isClient, setIsClient] = useState<boolean>(false)
-  const [isInitialized, setIsInitialized] = useState<boolean>(false)
 
+  // Derived state from backend
+  const walletSetup = !!walletInfo
+  const bybitConnected = bybitStatus?.hasKey ?? false
+  const isInitialized = !isLoadingWallet && !isLoadingBybit
+  
   // Derived state - show overlay if either setup is incomplete
-  const showOverlay = !walletSetup || !bybitConnected
+  const [showOverlay, setShowOverlay] = useState<boolean>(!walletSetup || !bybitConnected)
 
-  // Fetch setup status from backend on mount
   useEffect(() => {
-    // Ensure we're on the client before accessing localStorage
-    if (typeof window === 'undefined') return
-
-    setIsClient(true)
-
-    const fetchSetupStatus = async () => {
-      try {
-        // Check wallet setup from localStorage (temporary until API is available)
-        const userWalletSetup = localStorage.getItem("walletSetup") === "true"
-        setWalletSetup(userWalletSetup)
-
-        // Fetch Bybit connection status from API
-        try {
-          const bybitStatus = await getBybitKeyStatus()
-          setBybitConnected(bybitStatus.hasKey)
-        } catch (error) {
-          // If API call fails, assume not connected
-          setBybitConnected(false)
-        }
-      } catch (error) {
-        // Handle errors
-        console.error("Failed to read setup status:", error)
-        setWalletSetup(false)
-        setBybitConnected(false)
-      } finally {
-        setIsInitialized(true)
-      }
+    if (typeof window !== 'undefined') {
+      setIsClient(true)
     }
-
-    fetchSetupStatus()
-  }, [user])
+  }, [])
 
   const handleWalletSetupComplete = () => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("walletSetup", "true")
-      }
-      setWalletSetup(true)
-    } catch (error) {
-      console.error("Failed to save wallet setup status:", error)
-      // Still update state even if localStorage fails
-      setWalletSetup(true)
-    }
+    // No action needed - React Query will automatically refetch wallet info
+    // when user returns from wallet page
   }
 
-  const handleBybitConnect = async () => {
-    // Refresh the Bybit connection status from API
-    try {
-      const bybitStatus = await getBybitKeyStatus()
-      setBybitConnected(bybitStatus.hasKey)
-    } catch (error) {
-      console.error("Failed to refresh Bybit connection status:", error)
-      // Keep current state on error
-    }
+  const handleBybitConnect = () => {
+    // No action needed - React Query will automatically refetch Bybit status
+    // when user returns from connectivity page
   }
 
   const handleSkipSetup = () => {
-    // Allow user to skip setup
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("walletSetup", "true")
-      }
-      setWalletSetup(true)
-      // Don't automatically set Bybit as connected - let the API be the source of truth
-    } catch (error) {
-      console.error("Failed to save skip status:", error)
-      setWalletSetup(true)
-    }
+    // User chooses to skip setup for now
+    // No localStorage needed - backend is source of truth
+    setShowOverlay(false)
   }
 
   // Don't render until client-side hydration is complete
   if (!isClient || !isInitialized) {
     return (
-      <TooltipProvider>
         <div className="p-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-linear-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Wallet className="w-6 h-6 text-primary" aria-hidden="true" />
-                <h3 className="text-xl font-semibold text-foreground">Inventory</h3>
-              </div>
-            </Card>
+          <div className="flex justify-center items-center h-full">
+            <Loading message="Loading dashboard..." />
           </div>
         </div>
-      </TooltipProvider>
     )
   }
 
