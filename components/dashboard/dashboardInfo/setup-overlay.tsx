@@ -32,8 +32,8 @@ export function SetupOverlay({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in" />
-        <Dialog.Content onClick={() => onSkip()}  className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none cursor-pointer">
+        <Dialog.Overlay onClick={() => onSkip()} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in" />
+        <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none cursor-pointer">
           <div className="w-full max-w-2xl">
             <div className="relative rounded-2xl border border-primary/20 shadow-2xl overflow-hidden bg-linear-to-br from-card via-card/80 to-card/60 p-8 animate-in zoom-in-95">
               <div className="mb-6">
@@ -114,7 +114,7 @@ export function SetupOverlay({
 
               <Dialog.Close asChild>
                 <button
-                  className="absolute top-4 right-4 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm transition"
+                  className="cursor-pointer absolute top-4 right-4 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm transition"
                   aria-label="Close setup dialog"
                 >
                   <X className="w-5 h-5" aria-hidden="true" />
@@ -125,7 +125,7 @@ export function SetupOverlay({
             <div className="text-center mt-4">
               <Dialog.Close asChild>
                 <button
-                  className="text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-2 py-1 transition"
+                  className="cursor-pointer text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm px-2 py-1 transition"
                   aria-label="Skip setup for now"
                 >
                   Skip for now →

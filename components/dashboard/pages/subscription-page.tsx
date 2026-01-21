@@ -2,9 +2,13 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, Zap} from "lucide-react"
-import { useEffect, useState } from "react"
-import { useAuth } from "@/contexts/auth-context"
+import { Check, Zap } from "lucide-react"
+import { useState } from "react"
+import { useToast } from "@/components/ui/use-toast"
+import { useSubscriptionStatus, useInitiateSubscription } from "@/hooks/use-subscription-query"
+import { Tier, PaymentMethod } from "@/lib/services/subscription.types"
+import { PaymentMethodModal } from "@/components/dashboard/subscriptionInfo/payment-method-modal"
+import { ApiClientError } from "@/lib/api/client"
 import { Loading } from "@/components/ui/loading"
 
 const plans = [
@@ -35,7 +39,6 @@ const plans = [
       "Custom webhooks",
     ],
   },
- 
   {
     name: "Custom",
     price: "Contact",
@@ -59,39 +62,104 @@ const topUpPackages = [
 ]
 
 export function SubscriptionPage() {
+  const { toast } = useToast()
   const [showTopUp, setShowTopUp] = useState(false)
-  const { user } = useAuth()
-  const [loading, setLoading] = useState<boolean | undefined>(true)
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
-   useEffect(() => {
-    if (user?.subscription) {
-      setLoading(false)
-    }
-  }, [user])
-  // Extract subscription data from user
-  const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
-  const nextBillingDate = user?.subscription?.nextBillingDate 
-    ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })
+  // Fetch subscription status and VC data
+  const { data: subscriptionData, isLoading, error } = useSubscriptionStatus()
+  const initiateSubscriptionMutation = useInitiateSubscription()
+
+  console.log(subscriptionData, isLoading, error)
+
+  // Extract data from API response
+  const subscriptionStatus = subscriptionData?.subscriptionStatus.tier || 'FREE'
+  const nextBillingDate = subscriptionData?.subscriptionStatus.nextBillingDate
+    ? new Date(subscriptionData.subscriptionStatus.nextBillingDate).toLocaleDateString()
     : 'N/A'
   
-  // Extract volume capacity data from user
-  const usedVC = user?.volumeCapacity?.usedVC || 0
-  const monthlyVC = user?.volumeCapacity?.monthlyVC || 0
-  const usagePercentage = user?.volumeCapacity?.usagePercentage || 0
+  // Extract volume capacity data
+  const usedVC = subscriptionData?.vcStatus.usedVolume || 0
+  const monthlyVC = subscriptionData?.vcStatus.monthlyVC || 0
+  const availableVC = subscriptionData?.vcStatus.availableVC || 0
+  const usagePercentage = subscriptionData?.vcStatus.usagePercentage || 0
 
- 
-  if (loading) {
-      return (
-        <div className="p-8 space-y-8">
-          <div className="flex justify-center items-center h-full">
-            <Loading message="Loading subscription..." />
-          </div>
+  // Handle plan selection
+  const handleChoosePlan = (planName: string) => {
+    if (planName === "Custom") {
+      // Handle custom plan (contact sales)
+      toast({
+        title: "Contact Sales",
+        description: "Please contact our sales team for custom pricing.",
+      })
+      return
+    }
+
+    const tier = planName.toUpperCase() as Tier
+    setSelectedTier(tier)
+    setShowPaymentModal(true)
+  }
+
+  // Handle payment method confirmation
+  const handlePaymentConfirm = async (paymentMethod: PaymentMethod) => {
+    if (!selectedTier) return
+
+    initiateSubscriptionMutation.mutate(
+      { tier: selectedTier, paymentMethod },
+      {
+        onSuccess: (data) => {
+          toast({
+            title: "Success",
+            description: data.message || "Subscription initiated successfully.",
+          })
+          
+          // If payment URL is provided, redirect to payment page
+          if (data.paymentUrl) {
+            window.location.href = data.paymentUrl
+          } else {
+            setShowPaymentModal(false)
+            setSelectedTier(null)
+          }
+        },
+        onError: (error) => {
+          const apiError = error as ApiClientError
+          toast({
+            title: apiError.title || "Error",
+            description: apiError.message || "Failed to initiate subscription.",
+            variant: "destructive",
+          })
+        },
+      }
+    )
+  }
+
+  // Handle payment modal cancel
+  const handlePaymentCancel = () => {
+    setShowPaymentModal(false)
+    setSelectedTier(null)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="flex justify-center items-center h-full">
+          <Loading message="Loading subscription..." />
         </div>
-      )
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="flex justify-center items-center h-full">
+          <Card className="p-6 bg-destructive/10 border-destructive/20">
+            <p className="text-destructive">Failed to load subscription data. Please try again.</p>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -109,7 +177,7 @@ export function SubscriptionPage() {
             <h2 className="text-3xl font-bold text-primary mb-2">{subscriptionStatus}</h2>
             <p className="text-muted-foreground">Next billing: {nextBillingDate}</p>
             <p className="text-sm text-foreground mt-3">
-              <span className="font-semibold">Volume Capacity:</span> {usedVC.toLocaleString()} / {monthlyVC.toLocaleString()} vc used
+              <span className="font-semibold">Volume Capacity:</span> {usedVC.toLocaleString()} / {monthlyVC.toLocaleString()} vc used ({availableVC.toLocaleString()} available)
             </p>
           </div>
           <div className="flex flex-col gap-2 mt-4 md:mt-0">
@@ -190,6 +258,8 @@ export function SubscriptionPage() {
                           ? "bg-secondary hover:bg-secondary/90"
                           : "bg-primary hover:bg-primary/90 text-primary-foreground"
                       }`}
+                      onClick={() => !isCurrentPlan && handleChoosePlan(plan.name)}
+                      disabled={isCurrentPlan}
                     >
                       {isCurrentPlan ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
                     </Button>
@@ -212,6 +282,22 @@ export function SubscriptionPage() {
         </div>
       </div>
 
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        open={showPaymentModal}
+        onOpenChange={setShowPaymentModal}
+        tier={selectedTier || Tier.FREE}
+        tierPrice={
+          selectedTier === Tier.PRO
+            ? "₦14,999"
+            : selectedTier === Tier.FREE
+            ? "₦0"
+            : "Contact Sales"
+        }
+        loading={initiateSubscriptionMutation.isPending}
+        onConfirm={handlePaymentConfirm}
+        onCancel={handlePaymentCancel}
+      />
     </div>
   )
 }
