@@ -112,3 +112,10 @@ export async function proxyGet(request: NextRequest, backendPath: string): Promi
 export async function proxyPost(request: NextRequest, backendPath: string): Promise<NextResponse> {
   return proxyRequest(request, backendPath, { method: 'POST' })
 }
+
+/**
+ * Simple DELETE proxy helper
+ */
+export async function proxyDelete(request: NextRequest, backendPath: string): Promise<NextResponse> {
+  return proxyRequest(request, backendPath, { method: 'DELETE' })
+}

@@ -3,9 +3,12 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CheckCircle, AlertCircle } from "lucide-react"
-import { useState } from "react"
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
+import { addBybitKey, removeBybitKey } from "@/lib/services/bybit.service"
+import { ApiClientError } from "@/lib/api/client"
 
 const supportedBanks = [
   { value: "gtb", label: "Guaranty Trust Bank (GTB)", endpoint: "https://api.gtbank.com" },
@@ -17,6 +20,104 @@ const supportedBanks = [
 
 export function ConnectivityPage() {
   const [selectedBank, setSelectedBank] = useState<string>("")
+  const { toast } = useToast()
+  
+  // Bybit state
+  const [bybitApiKey, setBybitApiKey] = useState("")
+  const [bybitApiSecret, setBybitApiSecret] = useState("")
+  const [isConnected, setIsConnected] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Check connection status from localStorage on mount
+  useEffect(() => {
+    const connected = localStorage.getItem("bybitConnected") === "true"
+    setIsConnected(connected)
+  }, [])
+
+  const handleAddBybitKey = async () => {
+    if (!bybitApiKey.trim() || !bybitApiSecret.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter both API Key and API Secret",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await addBybitKey({
+        apiKey: bybitApiKey.trim(),
+        apiSecret: bybitApiSecret.trim(),
+      })
+
+      toast({
+        title: "Success",
+        description: response.message || "Bybit API key added successfully",
+      })
+
+      // Update connection status
+      setIsConnected(true)
+      localStorage.setItem("bybitConnected", "true")
+      
+      // Clear the input fields for security
+      setBybitApiKey("")
+      setBybitApiSecret("")
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        toast({
+          title: error.title || "Error",
+          description: error.message || "Failed to add Bybit API key",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRemoveBybitKey = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await removeBybitKey()
+
+      toast({
+        title: "Success",
+        description: response.message || "Bybit API key removed successfully",
+      })
+
+      // Update connection status
+      setIsConnected(false)
+      localStorage.setItem("bybitConnected", "false")
+      
+      // Clear the input fields
+      setBybitApiKey("")
+      setBybitApiSecret("")
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        toast({
+          title: error.title || "Error",
+          description: error.message || "Failed to remove Bybit API key",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -32,24 +133,71 @@ export function ConnectivityPage() {
             <h2 className="text-xl font-semibold text-foreground">Bybit API</h2>
             <p className="text-muted-foreground text-sm mt-1">Automate your cryptocurrency trading</p>
           </div>
-          <div className="flex items-center gap-2 bg-primary/20 text-primary px-3 py-2 rounded-lg">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">Connected</span>
-          </div>
+          {isConnected ? (
+            <div className="flex items-center gap-2 bg-primary/20 text-primary px-3 py-2 rounded-lg">
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">Connected</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-500 px-3 py-2 rounded-lg">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">Not Connected</span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">API Key</label>
-            <Input placeholder="Enter your Bybit API key" type="password" />
+            <Input 
+              placeholder="Enter your Bybit API key" 
+              type="password" 
+              value={bybitApiKey}
+              onChange={(e) => setBybitApiKey(e.target.value)}
+              disabled={isLoading || isDeleting}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">API Secret</label>
-            <Input placeholder="Enter your Bybit API secret" type="password" />
+            <Input 
+              placeholder="Enter your Bybit API secret" 
+              type="password"
+              value={bybitApiSecret}
+              onChange={(e) => setBybitApiSecret(e.target.value)}
+              disabled={isLoading || isDeleting}
+            />
           </div>
           <div className="flex gap-2">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Enable</Button>
-            <Button variant="outline">Test Connection</Button>
+            <Button 
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleAddBybitKey}
+              disabled={isLoading || isDeleting}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                isConnected ? "Update" : "Enable"
+              )}
+            </Button>
+            {isConnected && (
+              <Button 
+                variant="ghost"
+                onClick={handleRemoveBybitKey}
+                disabled={isLoading || isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </Card>
