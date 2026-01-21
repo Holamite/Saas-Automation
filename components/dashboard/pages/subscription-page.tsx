@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, Zap, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
 
 const plans = [
   {
@@ -32,7 +33,6 @@ const plans = [
       "Team access (3 users)",
       "Custom webhooks",
     ],
-    current: true,
   },
  
   {
@@ -59,17 +59,22 @@ const topUpPackages = [
 
 export function SubscriptionPage() {
   const [showTopUp, setShowTopUp] = useState(false)
-  // const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
-  // const [showLeftArrow, setShowLeftArrow] = useState(false)
-  // const [showRightArrow, setShowRightArrow] = useState(false)
-
-  // const handlePrevPlan = () => {
-  //   setCurrentPlanIndex((prev) => (prev === 0 ? Math.max(0, plans.length - 3) : prev - 1))
-  // }
-
-  // const handleNextPlan = () => {
-  //   setCurrentPlanIndex((prev) => (prev >= plans.length - 3 ? 0 : prev + 1))
-  // }
+  const { user } = useAuth()
+  
+  // Extract subscription data from user
+  const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
+  const nextBillingDate = user?.subscription?.nextBillingDate 
+    ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
+    : 'N/A'
+  
+  // Extract volume capacity data from user
+  const usedVC = user?.volumeCapacity?.usedVC || 0
+  const monthlyVC = user?.volumeCapacity?.monthlyVC || 0
+  const usagePercentage = user?.volumeCapacity?.usagePercentage || 0
 
   return (
     <div className="p-8 space-y-8">
@@ -83,15 +88,18 @@ export function SubscriptionPage() {
         <div className="flex flex-col md:flex-row justify-between md:items-center">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
-            <h2 className="text-3xl font-bold text-primary mb-2">Premium</h2>
-            <p className="text-muted-foreground">Next billing: December 31, 2025</p>
+            <h2 className="text-3xl font-bold text-primary mb-2">{subscriptionStatus}</h2>
+            <p className="text-muted-foreground">Next billing: {nextBillingDate}</p>
             <p className="text-sm text-foreground mt-3">
-              <span className="font-semibold">Volume Capacity:</span> 180,000 / 200,000 vc used
+              <span className="font-semibold">Volume Capacity:</span> {usedVC.toLocaleString()} / {monthlyVC.toLocaleString()} vc used
             </p>
           </div>
           <div className="flex flex-col gap-2 mt-4 md:mt-0">
             <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full w-[90%] bg-primary rounded-full" />
+              <div 
+                className="h-full bg-primary rounded-full" 
+                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+              />
             </div>
             <div className="flex gap-2">
               <Button variant="tertiary">Upgrade</Button>
@@ -135,104 +143,57 @@ export function SubscriptionPage() {
             <div
               className="flex gap-6 transition-transform duration-500 ease-out"
             >
-              {plans.map((plan) => (
-                <Card
-                  key={plan.name}
-                  className={`flex-shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
-                    plan.current ? "bg-primary/10 border-primary" : "bg-card border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
-                   {plan.current && (
-                    <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
-                      Current Plan
-                    </div>
-                  )}
-                  </div>
-                  <div className="mb-3">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
-                  </div>
-                  <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
-
-                  <Button
-                    className={`w-full py-6 ${
-                      plan.current
-                        ? "bg-secondary hover:bg-secondary/90"
-                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
+              {plans.map((plan) => {
+                const isCurrentPlan = plan.name.toLowerCase() === subscriptionStatus.toLowerCase()
+                return (
+                  <Card
+                    key={plan.name}
+                    className={`flex-shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
+                      isCurrentPlan ? "bg-primary/10 border-primary" : "bg-card border-border"
                     }`}
                   >
-                    {plan.current ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
-                  </Button>
+                    <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
+                     {isCurrentPlan && (
+                      <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
+                        Current Plan
+                      </div>
+                    )}
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
+                    </div>
+                    <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
 
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-foreground text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    <Button
+                      className={`w-full py-6 ${
+                        isCurrentPlan
+                          ? "bg-secondary hover:bg-secondary/90"
+                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                      }`}
+                    >
+                      {isCurrentPlan ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
+                    </Button>
 
-                </Card>
-              ))}
+                    <ul className="space-y-4 mb-8">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-foreground text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                  </Card>
+                )
+              })}
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Payment History */}
-      <Card className="bg-card border-border p-6">
-        <h3 className="text-xl font-semibold text-foreground mb-4">Payment History</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 text-muted-foreground font-medium">Date</th>
-                <th className="text-left py-3 text-muted-foreground font-medium">Description</th>
-                <th className="text-left py-3 text-muted-foreground font-medium">Amount</th>
-                <th className="text-left py-3 text-muted-foreground font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-border hover:bg-secondary">
-                <td className="py-3">2025-12-01</td>
-                <td className="py-3">Premium Plan - Monthly</td>
-                <td className="py-3">₦49,999</td>
-                <td className="py-3">
-                  <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">Paid</span>
-                </td>
-              </tr>
-              <tr className="border-b border-border hover:bg-secondary">
-                <td className="py-3">2025-11-15</td>
-                <td className="py-3">Top-up: Pro Pack</td>
-                <td className="py-3">₦6,999</td>
-                <td className="py-3">
-                  <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">Paid</span>
-                </td>
-              </tr>
-              <tr className="border-b border-border hover:bg-secondary">
-                <td className="py-3">2025-11-01</td>
-                <td className="py-3">Premium Plan - Monthly</td>
-                <td className="py-3">₦49,999</td>
-                <td className="py-3">
-                  <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">Paid</span>
-                </td>
-              </tr>
-              <tr className="border-b border-border hover:bg-secondary">
-                <td className="py-3">2025-10-30</td>
-                <td className="py-3">Premium Plan - Monthly</td>
-                <td className="py-3">₦49,999</td>
-                <td className="py-3">
-                  <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">Paid</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   )
 }
