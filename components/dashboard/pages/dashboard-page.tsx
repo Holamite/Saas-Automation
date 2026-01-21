@@ -12,6 +12,7 @@ import {
   RequestMetricsCard,
   SetupOverlay,
 } from "@/components/dashboard/dashboardInfo"
+import { getBybitKeyStatus } from "@/lib/services/bybit.service"
 
 // TODO: Replace with API call to fetch orders
 // Example: const { data: orders, isLoading, error } = useOrders()
@@ -58,37 +59,38 @@ export function DashboardPage() {
   // Derived state - show overlay if either setup is incomplete
   const showOverlay = !walletSetup || !bybitConnected
 
-  // TODO: Replace localStorage with API calls
-  // Example: const { data: setupStatus } = useSetupStatus()
-  // walletSetup = setupStatus?.walletCreated ?? false
-  // bybitConnected = setupStatus?.exchangeConnected ?? false
+  // Fetch setup status from backend on mount
   useEffect(() => {
     // Ensure we're on the client before accessing localStorage
     if (typeof window === 'undefined') return
 
     setIsClient(true)
 
-    try {
-      // Check user accounts from context if available
-      // TODO: Replace with proper API integration
-      // const hasWallet = user?.accounts?.some(acc => acc.provider === 'wallet')
-      // const hasBybit = user?.accounts?.some(acc => acc.provider === 'bybit')
-      
-      // For now, fallback to localStorage
-      const userWalletSetup = localStorage.getItem("walletSetup") === "true"
-      const userBybitConnected = localStorage.getItem("bybitConnected") === "true"
+    const fetchSetupStatus = async () => {
+      try {
+        // Check wallet setup from localStorage (temporary until API is available)
+        const userWalletSetup = localStorage.getItem("walletSetup") === "true"
+        setWalletSetup(userWalletSetup)
 
-      setWalletSetup(userWalletSetup)
-      setBybitConnected(userBybitConnected)
-    } catch (error) {
-      // Handle localStorage errors (e.g., private browsing mode)
-      console.error("Failed to read setup status:", error)
-      // Default to false if localStorage is unavailable
-      setWalletSetup(false)
-      setBybitConnected(false)
-    } finally {
-      setIsInitialized(true)
+        // Fetch Bybit connection status from API
+        try {
+          const bybitStatus = await getBybitKeyStatus()
+          setBybitConnected(bybitStatus.hasKey)
+        } catch (error) {
+          // If API call fails, assume not connected
+          setBybitConnected(false)
+        }
+      } catch (error) {
+        // Handle errors
+        console.error("Failed to read setup status:", error)
+        setWalletSetup(false)
+        setBybitConnected(false)
+      } finally {
+        setIsInitialized(true)
+      }
     }
+
+    fetchSetupStatus()
   }, [user])
 
   const handleWalletSetupComplete = () => {
@@ -104,16 +106,14 @@ export function DashboardPage() {
     }
   }
 
-  const handleBybitConnect = () => {
+  const handleBybitConnect = async () => {
+    // Refresh the Bybit connection status from API
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("bybitConnected", "true")
-      }
-      setBybitConnected(true)
+      const bybitStatus = await getBybitKeyStatus()
+      setBybitConnected(bybitStatus.hasKey)
     } catch (error) {
-      console.error("Failed to save Bybit connection status:", error)
-      // Still update state even if localStorage fails
-      setBybitConnected(true)
+      console.error("Failed to refresh Bybit connection status:", error)
+      // Keep current state on error
     }
   }
 
@@ -122,15 +122,12 @@ export function DashboardPage() {
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem("walletSetup", "true")
-        localStorage.setItem("bybitConnected", "true")
       }
       setWalletSetup(true)
-      setBybitConnected(true)
+      // Don't automatically set Bybit as connected - let the API be the source of truth
     } catch (error) {
       console.error("Failed to save skip status:", error)
-      // Still update state even if localStorage fails
       setWalletSetup(true)
-      setBybitConnected(true)
     }
   }
 

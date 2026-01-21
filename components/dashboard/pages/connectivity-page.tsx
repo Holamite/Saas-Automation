@@ -7,7 +7,7 @@ import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { addBybitKey, removeBybitKey } from "@/lib/services/bybit.service"
+import { addBybitKey, removeBybitKey, getBybitKeyStatus } from "@/lib/services/bybit.service"
 import { ApiClientError } from "@/lib/api/client"
 
 const supportedBanks = [
@@ -28,11 +28,23 @@ export function ConnectivityPage() {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
 
-  // Check connection status from localStorage on mount
+  // Fetch connection status from backend on mount
   useEffect(() => {
-    const connected = localStorage.getItem("bybitConnected") === "true"
-    setIsConnected(connected)
+    const fetchConnectionStatus = async () => {
+      try {
+        const status = await getBybitKeyStatus()
+        setIsConnected(status.hasKey)
+      } catch (error) {
+        // If error, assume not connected
+        setIsConnected(false)
+      } finally {
+        setIsCheckingStatus(false)
+      }
+    }
+
+    fetchConnectionStatus()
   }, [])
 
   const handleAddBybitKey = async () => {
@@ -59,7 +71,6 @@ export function ConnectivityPage() {
 
       // Update connection status
       setIsConnected(true)
-      localStorage.setItem("bybitConnected", "true")
       
       // Clear the input fields for security
       setBybitApiKey("")
@@ -95,7 +106,6 @@ export function ConnectivityPage() {
 
       // Update connection status
       setIsConnected(false)
-      localStorage.setItem("bybitConnected", "false")
       
       // Clear the input fields
       setBybitApiKey("")
@@ -133,7 +143,12 @@ export function ConnectivityPage() {
             <h2 className="text-xl font-semibold text-foreground">Bybit API</h2>
             <p className="text-muted-foreground text-sm mt-1">Automate your cryptocurrency trading</p>
           </div>
-          {isConnected ? (
+          {isCheckingStatus ? (
+            <div className="flex items-center gap-2 bg-muted/20 text-muted-foreground px-3 py-2 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm font-medium">Checking...</span>
+            </div>
+          ) : isConnected ? (
             <div className="flex items-center gap-2 bg-primary/20 text-primary px-3 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm font-medium">Connected</span>

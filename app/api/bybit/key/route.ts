@@ -1,5 +1,13 @@
 import { NextRequest } from 'next/server'
-import { proxyPost } from '@/lib/api/server'
+import { proxyGet, proxyPost } from '@/lib/api/server'
+
+/**
+ * GET /api/bybit/key
+ * Proxies to backend GET /bybit/key to get Bybit API key status
+ */
+export async function GET(request: NextRequest) {
+  return proxyGet(request, '/bybit/key')
+}
 
 /**
  * POST /api/bybit/key

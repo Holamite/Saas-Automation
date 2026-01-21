@@ -19,6 +19,18 @@ export interface BybitKeyResponse {
   message: string
 }
 
+export interface BybitKeyStatusResponse {
+  hasKey: boolean
+  apiKey?: string
+}
+
+/**
+ * Get Bybit API key status
+ */
+export const getBybitKeyStatus = async (): Promise<BybitKeyStatusResponse> => {
+  return api.get<BybitKeyStatusResponse>(BYBIT_ENDPOINTS.ADD_KEY)
+}
+
 /**
  * Add Bybit API key and secret
  */
