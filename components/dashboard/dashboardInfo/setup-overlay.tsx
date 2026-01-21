@@ -35,7 +35,7 @@ export function SetupOverlay({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in" />
         <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none">
           <div className="w-full max-w-2xl">
-            <div className="relative rounded-2xl border border-primary/20 shadow-2xl overflow-hidden bg-gradient-to-br from-card via-card/80 to-card/60 p-8 animate-in zoom-in-95">
+            <div className="relative rounded-2xl border border-primary/20 shadow-2xl overflow-hidden bg-linear-to-br from-card via-card/80 to-card/60 p-8 animate-in zoom-in-95">
               <div className="mb-6">
                 <Dialog.Title className="text-2xl font-bold text-foreground mb-2">Complete Your Setup</Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">

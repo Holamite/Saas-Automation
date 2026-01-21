@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_MENU_ITEMS } from '@/lib/constants/dashboard-menu'
+import { useAuth } from '@/contexts/auth-context'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -18,6 +19,25 @@ export function Sidebar() {
     }
     return pathname === path
   }
+
+  const { user } = useAuth()
+  // Extract subscription data from user
+  // const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
+  // const nextBillingDate = user?.subscription?.nextBillingDate 
+  //   ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', { 
+  //       year: 'numeric', 
+  //       month: 'long', 
+  //       day: 'numeric' 
+  //     })
+  //   : 'N/A'
+  const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
+  const nextBillingDate = user?.subscription?.nextBillingDate 
+    ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
+    : 'N/A'
 
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -55,8 +75,8 @@ export function Sidebar() {
 
       <div className="p-4 border-t border-sidebar-border">
         <div className="bg-sidebar-accent rounded-lg p-4 text-center">
-          <p className="text-sm text-sidebar-foreground font-medium">Premium Plan</p>
-          <p className="text-xs text-sidebar-foreground/70 mt-1">Active until Dec 31, 2025</p>
+          <p className="text-sm text-sidebar-foreground font-medium mb-2">Current Plan: {subscriptionStatus}</p>
+          <p className="text-xs text-sidebar-foreground/70 mt-1">Next billing: {nextBillingDate}</p>
         </div>
       </div>
     </aside>

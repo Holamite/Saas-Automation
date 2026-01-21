@@ -11,7 +11,6 @@ interface TopBarProps {
 
 export function TopBar({ onLogout }: TopBarProps) {
   const { user } = useAuth()
-  console.log('user', user)
   const name = getUserDisplayName(user)
   const role = getUserRole(user)
   const avatar = getUserInitials(user)

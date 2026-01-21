@@ -140,7 +140,7 @@ export function DashboardPage() {
       <TooltipProvider>
         <div className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
+            <Card className="bg-linear-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Wallet className="w-6 h-6 text-primary" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-foreground">Inventory</h3>
@@ -271,7 +271,7 @@ export function DashboardPage() {
             <p className="text-xs text-muted-foreground mt-2">All connected</p>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
+          <Card className="bg-linear-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
             <div className="flex items-center gap-3 mb-4">
               <Wallet className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold text-foreground">Risk Exposure</h3>

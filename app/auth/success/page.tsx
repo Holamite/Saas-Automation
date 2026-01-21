@@ -46,7 +46,7 @@ export default function AuthSuccess() {
         {/* Header Section */}
         <div className="text-center space-y-2">
           <div className="inline-block">
-            <div className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            <div className="text-4xl font-bold bg-linear-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               Doolf
             </div>
           </div>

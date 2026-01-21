@@ -84,7 +84,7 @@ export function SubscriptionPage() {
       </div>
 
       {/* Current Plan Info */}
-      <Card className="bg-gradient-to-r from-primary/20 to-primary/5 border-primary/20 p-6">
+      <Card className="bg-linear-to-r from-primary/20 to-primary/5 border-primary/20 p-6">
         <div className="flex flex-col md:flex-row justify-between md:items-center">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
@@ -148,7 +148,7 @@ export function SubscriptionPage() {
                 return (
                   <Card
                     key={plan.name}
-                    className={`flex-shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
+                    className={`shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
                       isCurrentPlan ? "bg-primary/10 border-primary" : "bg-card border-border"
                     }`}
                   >
@@ -179,7 +179,7 @@ export function SubscriptionPage() {
                     <ul className="space-y-4 mb-8">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-3">
-                          <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                           <span className="text-foreground text-sm">{feature}</span>
                         </li>
                       ))}

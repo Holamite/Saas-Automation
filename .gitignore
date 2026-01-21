@@ -4,7 +4,18 @@ node_modules
 # environment variables
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+
+# next.js
 .next
+
+# build artifacts
+tsconfig.tsbuildinfo
 
 # logs
 logs
@@ -17,13 +28,3 @@ bun-debug.log*
 
 # misc
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.development
-.env.test
-.env.production
-.env
-.env.local
-.env.development.localnode_modules

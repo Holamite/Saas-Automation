@@ -34,7 +34,7 @@ export function BvnVerificationModal({
     <Dialog open={open} onOpenChange={(o) => !o && onOpenChange(false)}>
       <DialogOverlay className="bg-black/50 cursor-pointer transition-opacity data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
       <DialogContent className="sm:max-w-[500px] bg-[#1a1a1a] border-border p-0 overflow-hidden shadow-2xl">
-        <div className="bg-gradient-to-r from-primary/15 to-primary/5 p-6 border-b border-border/50">
+        <div className="bg-linear-to-r from-primary/15 to-primary/5 p-6 border-b border-border/50">
           <DialogHeader className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">

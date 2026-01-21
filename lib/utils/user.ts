@@ -13,8 +13,6 @@ export function getUserDisplayName(user: User | null): string {
  * Get user role with fallback to 'USER'
  */
 export function getUserRole(user: User | null) {
-  console.log('user', user)
-  console.log('user?.role', user?.role)
   return user?.role || "MERCHANT"
 }
 

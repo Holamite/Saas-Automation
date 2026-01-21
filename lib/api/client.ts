@@ -10,10 +10,6 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResp
 const USE_API_PROXY = true
 const BACKEND_URL = process.env.NEXT_PUBLIC_BASEURL || "http://localhost:3000"
 
-if (!BACKEND_URL && !USE_API_PROXY) {
-  console.warn('NEXT_PUBLIC_BASEURL is not set')
-}
-
 export class ApiClientError extends Error {
   status?: number
   title?: string
