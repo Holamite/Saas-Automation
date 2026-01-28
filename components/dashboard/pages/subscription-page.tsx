@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Check, Zap } from "lucide-react"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/contexts/auth-context"
 import { useSubscriptionStatus, useInitiateSubscription } from "@/hooks/use-subscription-query"
 import { Tier, PaymentMethod } from "@/lib/services/subscription.types"
 import { PaymentMethodModal } from "@/components/dashboard/subscriptionInfo/payment-method-modal"
@@ -63,15 +64,14 @@ const topUpPackages = [
 
 export function SubscriptionPage() {
   const { toast } = useToast()
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
   const [showTopUp, setShowTopUp] = useState(false)
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
-  // Fetch subscription status and VC data
-  const { data: subscriptionData, isLoading, error } = useSubscriptionStatus()
+  // Fetch subscription status and VC data - only when authenticated
+  const { data: subscriptionData, isLoading, error } = useSubscriptionStatus(isAuthenticated && !isAuthLoading)
   const initiateSubscriptionMutation = useInitiateSubscription()
-
-  console.log(subscriptionData, isLoading, error)
 
   // Extract data from API response
   const subscriptionStatus = subscriptionData?.subscriptionStatus.tier || 'FREE'
@@ -140,7 +140,8 @@ export function SubscriptionPage() {
     setSelectedTier(null)
   }
 
-  if (isLoading) {
+  // Show loading state while checking authentication or fetching data
+  if (isAuthLoading || isLoading) {
     return (
       <div className="p-8 space-y-8">
         <div className="flex justify-center items-center h-full">
@@ -150,7 +151,8 @@ export function SubscriptionPage() {
     )
   }
 
-  if (error) {
+  // Show error only if authenticated and there's an actual error
+  if (isAuthenticated && error) {
     return (
       <div className="p-8 space-y-8">
         <div className="flex justify-center items-center h-full">

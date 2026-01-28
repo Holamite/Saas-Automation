@@ -12,7 +12,7 @@ import {
   RequestMetricsCard,
   SetupOverlay,
 } from "@/components/dashboard/dashboardInfo"
-import { useWalletInfo } from "@/hooks/use-wallet-query"
+// import { useWalletInfo } from "@/hooks/use-wallet-query"
 import { useBybitKeyStatus } from "@/hooks/use-bybit-query"
 import { Loading } from "@/components/ui/loading"
 
@@ -52,18 +52,18 @@ const MOCK_ORDERS = [
 ]
 
 export function DashboardPage() {
-  const { user } = useAuth()
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth()
   
-  // React Query hooks for setup status
-  const { data: walletInfo, isLoading: isLoadingWallet } = useWalletInfo()
-  const { data: bybitStatus, isLoading: isLoadingBybit } = useBybitKeyStatus()
+  // React Query hooks for setup status - only when authenticated
+  // const { data: walletInfo, isLoading: isLoadingWallet } = useWalletInfo(isAuthenticated && !isAuthLoading)
+  const { data: bybitStatus, isLoading: isLoadingBybit } = useBybitKeyStatus(isAuthenticated && !isAuthLoading)
   
   const [isClient, setIsClient] = useState<boolean>(false)
 
   // Derived state from backend
-  const walletSetup = !!walletInfo
+  const walletSetup = false;
   const bybitConnected = bybitStatus?.hasKey ?? false
-  const isInitialized = !isLoadingWallet && !isLoadingBybit
+  const isInitialized = !isLoadingBybit
   
   // Derived state - show overlay if either setup is incomplete
   const [showOverlay, setShowOverlay] = useState<boolean>(!walletSetup || !bybitConnected)

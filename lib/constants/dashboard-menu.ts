@@ -9,7 +9,6 @@ export interface DashboardMenuItem {
 
 export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-  { id: "wallet", label: "Wallet", icon: Wallet, path: '/dashboard/wallet' },
   { id: 'transactions', label: 'Transactions', icon: CreditCard, path: '/dashboard/transactions' },
   { id: 'orders', label: 'Orders', icon: ShoppingCart, path: '/dashboard/orders' },
   { id: 'connectivity', label: 'Connectivity', icon: Zap, path: '/dashboard/connectivity' },

@@ -27,12 +27,13 @@ export const subscriptionKeys = {
 /**
  * Query: Get subscription status and volume capacity
  */
-export function useSubscriptionStatus() {
+export function useSubscriptionStatus(enabled = true) {
   return useQuery<SubscriptionStatusResponse, ApiClientError>({
     queryKey: subscriptionKeys.status(),
     queryFn: getSubscriptionStatus,
     staleTime: 2 * 60 * 1000, // 2 minutes
     retry: 1,
+    enabled, // Only fetch when enabled (e.g., user is authenticated)
   })
 }
 

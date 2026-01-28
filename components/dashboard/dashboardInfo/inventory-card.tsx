@@ -2,10 +2,8 @@
 
 import { Wallet } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { useWalletBalance } from "@/hooks/use-wallet-query"
 
 export function InventoryCard() {
-  const {data: walletBalance} = useWalletBalance()
 
   return (
     <Card className="bg-linear-to-br from-primary/20 to-primary/5 border-primary/20 p-6">
@@ -21,7 +19,7 @@ export function InventoryCard() {
         </div>
         <div className="border-t border-border pt-4">
           <p className="text-sm text-muted-foreground mb-2">Total Bank Balance</p>
-          <p className="text-3xl font-bold text-foreground">₦{(walletBalance?.availableBalance || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-3xl font-bold text-foreground">₦45,466,644.00</p>
           <p className="text-xs text-muted-foreground mt-1">Across all accounts</p>
         </div>
       </div>

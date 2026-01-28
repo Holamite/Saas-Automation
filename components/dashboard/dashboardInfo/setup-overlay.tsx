@@ -97,7 +97,7 @@ export function SetupOverlay({
 
               <div className="flex flex-col gap-3">
                 {!walletSetup && (
-                  <Link href="/dashboard/wallet" onClick={onWalletSetupComplete}>
+                  <Link href="/dashboard/connectivity" onClick={onWalletSetupComplete}>
                     <Button className="w-full py-5 font-semibold">
                       Set Up Wallet <ArrowUpRight className="ml-2 w-4 h-4" />
                     </Button>

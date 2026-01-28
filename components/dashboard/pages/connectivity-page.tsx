@@ -7,23 +7,23 @@ import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/contexts/auth-context"
 import { useBybitKeyStatus, useAddBybitKey, useRemoveBybitKey } from "@/hooks/use-bybit-query"
 import { ApiClientError } from "@/lib/api/client"
 
 const supportedBanks = [
-  { value: "gtb", label: "Guaranty Trust Bank (GTB)", endpoint: "https://api.gtbank.com" },
-  { value: "firstbank", label: "First Bank Nigeria", endpoint: "https://api.firstbanknigeria.com" },
-  { value: "access", label: "Access Bank", endpoint: "https://api.accessbankplc.com" },
-  { value: "zenith", label: "Zenith Bank", endpoint: "https://api.zenithbank.com" },
-  { value: "uba", label: "United Bank for Africa (UBA)", endpoint: "https://api.ubagroup.com" },
+  { value: "Monnify", label: "Monnify", endpoint: "https://api.monnify.com" },
+  { value: "Paystack", label: "Paystack", endpoint: "https://api.paystack.com" },
+  { value: "Nombank", label: "Nombank", endpoint: "https://api.nombank.com" },
 ]
 
 export function ConnectivityPage() {
   const [selectedBank, setSelectedBank] = useState<string>("")
   const { toast } = useToast()
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
   
-  // React Query hooks for Bybit
-  const { data: bybitStatus, isLoading: isCheckingStatus } = useBybitKeyStatus()
+  // React Query hooks for Bybit - only when authenticated
+  const { data: bybitStatus, isLoading: isCheckingStatus } = useBybitKeyStatus(isAuthenticated && !isAuthLoading)
   const addKeyMutation = useAddBybitKey()
   const removeKeyMutation = useRemoveBybitKey()
   

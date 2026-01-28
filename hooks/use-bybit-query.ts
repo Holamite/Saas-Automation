@@ -25,11 +25,12 @@ export const bybitKeys = {
  * Hook to fetch Bybit key status
  * Auto-fetches on mount, caches result, and handles errors
  */
-export function useBybitKeyStatus() {
+export function useBybitKeyStatus(enabled = true) {
   return useQuery<BybitKeyStatusResponse>({
     queryKey: bybitKeys.status(),
     queryFn: getBybitKeyStatus,
     retry: 1,
+    enabled, // Only fetch when enabled (e.g., user is authenticated)
   })
 }
 
