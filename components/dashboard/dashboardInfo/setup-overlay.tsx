@@ -39,7 +39,7 @@ export function SetupOverlay({
               <div className="mb-6">
                 <Dialog.Title className="text-2xl font-bold text-foreground mb-2">Complete Your Setup</Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
-                  Connect your wallet and link your Bybit account to get started with Doolf automation.
+                  Connect your Bank and link your Bybit account to get started with Doolf automation.
                 </Dialog.Description>
               </div>
 
@@ -61,10 +61,10 @@ export function SetupOverlay({
                     </div>
                     <div>
                       <h4 className={`font-semibold ${walletSetup ? "text-primary" : "text-foreground"}`}>
-                        Set Up Your Wallet
+                        Connect Your Bank API
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Create and verify your NGN Wallet for seamless transactions.
+                        Link your Bank API keys and secrets for seamless NGN transactions.
                       </p>
                     </div>
                   </div>
@@ -99,7 +99,7 @@ export function SetupOverlay({
                 {!walletSetup && (
                   <Link href="/dashboard/connectivity" onClick={onWalletSetupComplete}>
                     <Button className="w-full py-5 font-semibold">
-                      Set Up Wallet <ArrowUpRight className="ml-2 w-4 h-4" />
+                      Connect Bank API <ArrowUpRight className="ml-2 w-4 h-4" />
                     </Button>
                   </Link>
                 )}
