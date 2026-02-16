@@ -114,6 +114,13 @@ export async function proxyPost(request: NextRequest, backendPath: string): Prom
 }
 
 /**
+ * Simple PUT proxy helper
+ */
+export async function proxyPut(request: NextRequest, backendPath: string): Promise<NextResponse> {
+  return proxyRequest(request, backendPath, { method: 'PUT' })
+}
+
+/**
  * Simple DELETE proxy helper
  */
 export async function proxyDelete(request: NextRequest, backendPath: string): Promise<NextResponse> {

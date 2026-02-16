@@ -56,7 +56,7 @@ let isRefreshing = false
 
 function buildUrl(endpoint: string): string {
   if (endpoint.startsWith('http')) return endpoint
-  if (USE_API_PROXY && (endpoint.startsWith('/auth/') || endpoint.startsWith('/users/') || endpoint.startsWith('/bybit/') || endpoint.startsWith('/wallet/') || endpoint.startsWith('/subscriptions/')))
+  if (USE_API_PROXY && (endpoint.startsWith('/auth/') || endpoint.startsWith('/users/') || endpoint.startsWith('/bybit/') || endpoint.startsWith('/wallet/') || endpoint.startsWith('/subscriptions/') || endpoint.startsWith('/automation/')))
     return `/api${endpoint}`
   const base = (BACKEND_URL || '').replace(/\/+$/, '')
   const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
