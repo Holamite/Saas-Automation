@@ -13,7 +13,7 @@ import type {
   InitiateSubscriptionResponse,
   SubscriptionStatusResponse,
   VerifyPaymentResponse,
-} from "@/lib/services/subscription.types"
+} from "@/lib/types/subscription.types"
 import { ApiClientError } from "@/lib/api/client"
 
 // Query Keys

@@ -8,7 +8,7 @@ import type {
   InitiateSubscriptionResponse,
   SubscriptionStatusResponse,
   VerifyPaymentResponse,
-} from './subscription.types'
+} from '../types/subscription.types'
 
 const SUBSCRIPTION_ENDPOINTS = {
   INITIATE: '/subscriptions/initiate',

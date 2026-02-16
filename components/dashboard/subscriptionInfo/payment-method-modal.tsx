@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { CreditCard, Wallet } from "lucide-react"
-import { PaymentMethod, Tier } from "@/lib/services/subscription.types"
+import { PaymentMethod, Tier } from "@/lib/types/subscription.types"
 import { cn } from "@/lib/utils"
 
 interface PaymentMethodModalProps {
@@ -62,7 +62,7 @@ export function PaymentMethodModal({
           {/* Payment Methods */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-foreground">Payment Method</p>
-            
+
             {/* Wallet Option */}
             <button
               onClick={() => setSelectedMethod(PaymentMethod.WALLET)}

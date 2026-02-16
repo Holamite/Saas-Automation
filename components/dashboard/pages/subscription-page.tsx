@@ -7,7 +7,7 @@ import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useSubscriptionStatus, useInitiateSubscription } from "@/hooks/use-subscription-query"
-import { Tier, PaymentMethod } from "@/lib/services/subscription.types"
+import { Tier, PaymentMethod } from "@/lib/types/subscription.types"
 import { PaymentMethodModal } from "@/components/dashboard/subscriptionInfo/payment-method-modal"
 import { ApiClientError } from "@/lib/api/client"
 import { Loading } from "@/components/ui/loading"
@@ -56,10 +56,10 @@ const plans = [
 ]
 
 const topUpPackages = [
-  { name: "Starter Pack", vc: "5,000 vc", price: "₦999"},
-  { name: "Growth Pack", vc: "20,000 vc", price: "₦2,999"},
-  { name: "Pro Pack", vc: "50,000 vc", price: "₦6,999"},
-  { name: "Enterprise Pack", vc: "100,000 vc", price: "₦12,999"},
+  { name: "Starter Pack", vc: "5,000 vc", price: "₦999" },
+  { name: "Growth Pack", vc: "20,000 vc", price: "₦2,999" },
+  { name: "Pro Pack", vc: "50,000 vc", price: "₦6,999" },
+  { name: "Enterprise Pack", vc: "100,000 vc", price: "₦12,999" },
 ]
 
 export function SubscriptionPage() {
@@ -78,7 +78,7 @@ export function SubscriptionPage() {
   const nextBillingDate = subscriptionData?.subscriptionStatus.nextBillingDate
     ? new Date(subscriptionData.subscriptionStatus.nextBillingDate).toLocaleDateString()
     : 'N/A'
-  
+
   // Extract volume capacity data
   const usedVC = subscriptionData?.vcStatus.usedVolume || 0
   const monthlyVC = subscriptionData?.vcStatus.monthlyVC || 0
@@ -113,7 +113,7 @@ export function SubscriptionPage() {
             title: "Success",
             description: data.message || "Subscription initiated successfully.",
           })
-          
+
           // If payment URL is provided, redirect to payment page
           if (data.paymentUrl) {
             window.location.href = data.paymentUrl
@@ -184,8 +184,8 @@ export function SubscriptionPage() {
           </div>
           <div className="flex flex-col gap-2 mt-4 md:mt-0">
             <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full" 
+              <div
+                className="h-full bg-primary rounded-full"
                 style={{ width: `${Math.min(usagePercentage, 100)}%` }}
               />
             </div>
@@ -225,7 +225,7 @@ export function SubscriptionPage() {
       <div>
         <h3 className="text-xl font-semibold text-foreground mb-6">All Plans</h3>
         <div
-          className="relative" 
+          className="relative"
         >
           <div className="overflow-hidden">
             <div
@@ -236,17 +236,16 @@ export function SubscriptionPage() {
                 return (
                   <Card
                     key={plan.name}
-                    className={`shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
-                      isCurrentPlan ? "bg-primary/10 border-primary" : "bg-card border-border"
-                    }`}
+                    className={`shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${isCurrentPlan ? "bg-primary/10 border-primary" : "bg-card border-border"
+                      }`}
                   >
                     <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
-                     {isCurrentPlan && (
-                      <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
-                        Current Plan
-                      </div>
-                    )}
+                      <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
+                      {isCurrentPlan && (
+                        <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
+                          Current Plan
+                        </div>
+                      )}
                     </div>
                     <div className="mb-3">
                       <span className="text-4xl font-bold text-foreground">{plan.price}</span>
@@ -255,11 +254,10 @@ export function SubscriptionPage() {
                     <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
 
                     <Button
-                      className={`w-full py-6 ${
-                        isCurrentPlan
+                      className={`w-full py-6 ${isCurrentPlan
                           ? "bg-secondary hover:bg-secondary/90"
                           : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                      }`}
+                        }`}
                       onClick={() => !isCurrentPlan && handleChoosePlan(plan.name)}
                       disabled={isCurrentPlan}
                     >
@@ -293,8 +291,8 @@ export function SubscriptionPage() {
           selectedTier === Tier.PRO
             ? "₦14,999"
             : selectedTier === Tier.FREE
-            ? "₦0"
-            : "Contact Sales"
+              ? "₦0"
+              : "Contact Sales"
         }
         loading={initiateSubscriptionMutation.isPending}
         onConfirm={handlePaymentConfirm}
