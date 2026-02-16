@@ -11,7 +11,7 @@ const AUTOMATION_ENDPOINTS = {
   ORDER_RULES: '/automation/order/rules',
 } as const
 
-/** Order automation rules as returned by GET /automation/order/rules */
+/** Order automation rules as returned by GET /automation/order/rules (AutomationRule entity) */
 export interface OrderRulesResponse {
   automationEnabled?: boolean
   autoPayEnabled?: boolean
@@ -22,7 +22,8 @@ export interface OrderRulesResponse {
   notifyOnAutomation?: boolean
   notifyOnManualReview?: boolean
   notifyOnErrors?: boolean
-  pollIntervalMs?: number
+  webhookEnabled?: boolean
+  pollInterval?: string
   pollActive?: boolean
 }
 

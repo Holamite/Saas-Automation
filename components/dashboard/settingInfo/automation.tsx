@@ -17,7 +17,6 @@ import type { OrderRulesResponse } from '@/lib/services/automation.service'
 import { Button } from '@/components/ui/button'
 
 interface AutomationSettings {
-  enableAutomation: boolean
   autoPayEnabled: boolean
   autoReleaseEnabled: boolean
   requireAmountMatch: boolean
@@ -29,7 +28,6 @@ interface AutomationSettings {
 }
 
 const DEFAULT_AUTOMATION_SETTINGS: AutomationSettings = {
-  enableAutomation: false,
   autoPayEnabled: true,
   autoReleaseEnabled: true,
   requireAmountMatch: true,
@@ -43,7 +41,7 @@ const DEFAULT_AUTOMATION_SETTINGS: AutomationSettings = {
 function mapOrderRulesToSettings(rules: OrderRulesResponse | undefined): AutomationSettings {
   if (!rules) return DEFAULT_AUTOMATION_SETTINGS
   return {
-    enableAutomation: rules.automationEnabled ?? DEFAULT_AUTOMATION_SETTINGS.enableAutomation,
+    ...DEFAULT_AUTOMATION_SETTINGS,
     autoPayEnabled: rules.autoPayEnabled ?? DEFAULT_AUTOMATION_SETTINGS.autoPayEnabled,
     autoReleaseEnabled: rules.autoReleaseEnabled ?? DEFAULT_AUTOMATION_SETTINGS.autoReleaseEnabled,
     requireAmountMatch: rules.requireAmountMatch ?? DEFAULT_AUTOMATION_SETTINGS.requireAmountMatch,
@@ -68,27 +66,21 @@ export function Automation() {
   const [hasHydrated, setHasHydrated] = useState(false)
 
   useEffect(() => {
-    if (orderRules == null) return
-    if (!hasHydrated) {
-      setAutomationSettings(mapOrderRulesToSettings(orderRules))
-      setHasHydrated(true)
-    } else {
-      setAutomationSettings((prev) => ({
-        ...prev,
-        enableAutomation: orderRules.automationEnabled ?? prev.enableAutomation,
-      }))
-    }
+    if (orderRules == null || hasHydrated) return
+    setAutomationSettings(mapOrderRulesToSettings(orderRules))
+    setHasHydrated(true)
   }, [orderRules, hasHydrated])
 
   const isEnableAutomationPending = startMutation.isPending || stopMutation.isPending
 
-  const handleToggleChange = (key: keyof AutomationSettings) => {
+  const automationEnabled = orderRules?.automationEnabled ?? false
+
+  const handleToggleChange = (key: keyof AutomationSettings | 'enableAutomation') => {
     if (key === 'enableAutomation') {
-      const nextEnabled = !automationSettings.enableAutomation
+      const nextEnabled = !automationEnabled
       if (nextEnabled) {
         startMutation.mutate(undefined, {
           onSuccess: () => {
-            setAutomationSettings((prev) => ({ ...prev, enableAutomation: true }))
             toast({ title: 'Success', description: 'Automation started successfully' })
           },
           onError: (error) => {
@@ -99,7 +91,6 @@ export function Automation() {
       } else {
         stopMutation.mutate(undefined, {
           onSuccess: () => {
-            setAutomationSettings((prev) => ({ ...prev, enableAutomation: false }))
             toast({ title: 'Success', description: 'Automation stopped successfully' })
           },
           onError: (error) => {
@@ -169,7 +160,7 @@ export function Automation() {
               <p className="text-muted-foreground text-sm">Start or stop the automation runner (order and ad polling)</p>
             </div>
             <Switch
-              checked={automationSettings.enableAutomation}
+              checked={automationEnabled}
               onCheckedChange={() => handleToggleChange('enableAutomation')}
               disabled={isFormDisabled || isEnableAutomationPending}
             />
