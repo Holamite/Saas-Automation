@@ -8,7 +8,7 @@ import { useState, useEffect } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
-import { useBybitKeyStatus, useAddBybitKey, useRemoveBybitKey } from "@/hooks/use-bybit-query"
+import { useBybitKeyStatus, useAddBybitKey, useUpdateBybitKey, useRemoveBybitKey } from "@/hooks/use-bybit-query"
 import { ApiClientError } from "@/lib/api/client"
 
 const supportedBanks = [
@@ -25,6 +25,7 @@ export function ConnectivityPage() {
   // React Query hooks for Bybit - only when authenticated
   const { data: bybitStatus, isLoading: isCheckingStatus } = useBybitKeyStatus(isAuthenticated && !isAuthLoading)
   const addKeyMutation = useAddBybitKey()
+  const updateKeyMutation = useUpdateBybitKey()
   const removeKeyMutation = useRemoveBybitKey()
   
   // Bybit state
@@ -65,6 +66,49 @@ export function ConnectivityPage() {
             toast({
               title: error.title || "Error",
               description: error.message || "Failed to add Bybit API key",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: "An unexpected error occurred",
+              variant: "destructive",
+            })
+          }
+        },
+      }
+    )
+  }
+
+  const handleUpdateBybitKey = () => {
+    if (!bybitApiKey.trim() || !bybitApiSecret.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter both API Key and API Secret",
+        variant: "destructive",
+      })
+      return
+    }
+
+    updateKeyMutation.mutate(
+      {
+        apiKey: bybitApiKey.trim(),
+        apiSecret: bybitApiSecret.trim(),
+      },
+      {
+        onSuccess: (response) => {
+          toast({
+            title: "Success",
+            description: response.message || "Bybit API key updated successfully",
+          })
+          setBybitApiKey("")
+          setBybitApiSecret("")
+        },
+        onError: (error) => {
+          if (error instanceof ApiClientError) {
+            toast({
+              title: error.title || "Error",
+              description: error.message || "Failed to update Bybit API key",
               variant: "destructive",
             })
           } else {
@@ -149,7 +193,7 @@ export function ConnectivityPage() {
               type="password" 
               value={bybitApiKey}
               onChange={(e) => setBybitApiKey(e.target.value)}
-              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
+              disabled={addKeyMutation.isPending || updateKeyMutation.isPending || removeKeyMutation.isPending}
             />
           </div>
           <div>
@@ -159,19 +203,19 @@ export function ConnectivityPage() {
               type="password"
               value={bybitApiSecret}
               onChange={(e) => setBybitApiSecret(e.target.value)}
-              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
+              disabled={addKeyMutation.isPending || updateKeyMutation.isPending || removeKeyMutation.isPending}
             />
           </div>
           <div className="flex gap-2">
             <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleAddBybitKey}
-              disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
+              onClick={isConnected ? handleUpdateBybitKey : handleAddBybitKey}
+              disabled={addKeyMutation.isPending || updateKeyMutation.isPending || removeKeyMutation.isPending}
             >
-              {addKeyMutation.isPending ? (
+              {(addKeyMutation.isPending || updateKeyMutation.isPending) ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Connecting...
+                  {isConnected ? "Updating..." : "Connecting..."}
                 </>
               ) : (
                 isConnected ? "Update" : "Enable"
@@ -181,7 +225,7 @@ export function ConnectivityPage() {
               <Button 
                 variant="ghost"
                 onClick={handleRemoveBybitKey}
-                disabled={addKeyMutation.isPending || removeKeyMutation.isPending}
+                disabled={addKeyMutation.isPending || updateKeyMutation.isPending || removeKeyMutation.isPending}
               >
                 {removeKeyMutation.isPending ? (
                   <>

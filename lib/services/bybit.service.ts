@@ -15,6 +15,8 @@ export interface AddBybitKeyDto {
   apiSecret: string
 }
 
+export type UpdateKeyDto = AddBybitKeyDto
+
 export interface BybitKeyResponse {
   message: string
 }
@@ -36,6 +38,13 @@ export const getBybitKeyStatus = async (): Promise<BybitKeyStatusResponse> => {
  */
 export const addBybitKey = async (data: AddBybitKeyDto): Promise<BybitKeyResponse> => {
   return api.post<BybitKeyResponse>(BYBIT_ENDPOINTS.ADD_KEY, data)
+}
+
+/**
+ * Update Bybit API key and secret
+ */
+export const updateBybitKey = async (data: UpdateKeyDto): Promise<BybitKeyResponse> => {
+  return api.put<BybitKeyResponse>(BYBIT_ENDPOINTS.ADD_KEY, data)
 }
 
 /**

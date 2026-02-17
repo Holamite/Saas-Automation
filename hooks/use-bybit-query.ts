@@ -6,11 +6,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { 
   addBybitKey, 
+  updateBybitKey,
   removeBybitKey, 
   getBybitKeyStatus 
 } from "@/lib/services/bybit.service"
 import type { 
   AddBybitKeyDto, 
+  UpdateKeyDto,
   BybitKeyResponse,
   BybitKeyStatusResponse 
 } from "@/lib/services/bybit.service"
@@ -48,6 +50,21 @@ export function useAddBybitKey() {
       queryClient.setQueryData<BybitKeyStatusResponse>(bybitKeys.status(), {
         hasKey: true,
       })
+    },
+  })
+}
+
+/**
+ * Hook to update Bybit API key
+ * Invalidates status cache on success (key remains connected)
+ */
+export function useUpdateBybitKey() {
+  const queryClient = useQueryClient()
+
+  return useMutation<BybitKeyResponse, Error, UpdateKeyDto>({
+    mutationFn: updateBybitKey,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bybitKeys.status() })
     },
   })
 }
