@@ -19,15 +19,10 @@ export function Automation() {
 
   return (
     <>
-      <OrderAutomationCard
+      <AutomationNotificationsCard
+        automationSettings={paymentForm.automationSettings}
         isFormDisabled={paymentForm.isFormDisabled}
-        onSuccess={(msg) => toast({ title: 'Success', description: msg })}
-        onError={(msg) => toast({ title: 'Error', description: msg, variant: 'destructive' })}
-      />
-      <AdStrategyCard
-        isAuthenticated={isAuthenticated}
-        onSuccess={(msg) => toast({ title: 'Success', description: msg })}
-        onError={(msg) => toast({ title: 'Error', description: msg, variant: 'destructive' })}
+        onToggleChange={paymentForm.handleToggleChange}
       />
       <PaymentSettingsCard
         automationSettings={paymentForm.automationSettings}
@@ -40,10 +35,15 @@ export function Automation() {
         onNumberInputChange={paymentForm.handleNumberInputChange}
         onSaveSettings={paymentForm.handleSaveSettings}
       />
-      <AutomationNotificationsCard
-        automationSettings={paymentForm.automationSettings}
+      <OrderAutomationCard
         isFormDisabled={paymentForm.isFormDisabled}
-        onToggleChange={paymentForm.handleToggleChange}
+        onSuccess={(msg) => toast({ title: 'Success', description: msg })}
+        onError={(msg) => toast({ title: 'Error', description: msg, variant: 'destructive' })}
+      />
+      <AdStrategyCard
+        isAuthenticated={isAuthenticated}
+        onSuccess={(msg) => toast({ title: 'Success', description: msg })}
+        onError={(msg) => toast({ title: 'Error', description: msg, variant: 'destructive' })}
       />
     </>
   )
