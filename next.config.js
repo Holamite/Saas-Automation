@@ -24,15 +24,15 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    // Resolve to absolute path so Heroku/deploy finds Next.js from project directory
+    root: path.resolve(__dirname),
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     unoptimized: true,
-  },
-  experimental: {
-    turbopack: true,
-    turbopackRoot: __dirname, // ← points to repo root
   },
 };
 
