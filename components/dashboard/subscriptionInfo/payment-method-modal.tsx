@@ -84,7 +84,7 @@ export function PaymentMethodModal({
               </div>
               <div className="flex-1 text-left">
                 <p className="font-semibold text-foreground">Pay with Wallet</p>
-                <p className="text-sm text-muted-foreground">Use your Doolf wallet balance</p>
+                <p className="text-sm text-muted-foreground">Use your Dolf wallet balance</p>
               </div>
               {selectedMethod === PaymentMethod.WALLET && (
                 <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">

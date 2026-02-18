@@ -20,7 +20,7 @@ export function TopBar({ onLogout }: TopBarProps) {
   return (
     <header className="bg-card border-b border-border px-8 py-4 flex items-center justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Welcome to Doolf</h2>
+        <h2 className="text-lg font-semibold text-foreground">Welcome to Dolf</h2>
         <p className="text-sm text-muted-foreground">Manage your automated trading</p>
       </div>
 

@@ -13,49 +13,49 @@ interface LandingPageProps {
 export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
 
   const plans = [
-  {
-    name: "Free",
-    price: "₦0",
-    period: "/month",
-    volumeCapacity: "1,000 vc/month",
-    features: [
-      "Up to 2 trading accounts",
-      "50 orders per month",
-      "Basic reporting",
-      "Email support",
-      "Single user access",
-    ],
-  },
-  {
-    name: "Pro",
-    price: "₦14,999",
-    period: "/month",
-    volumeCapacity: "50,000 vc/month",
-    features: [
-      "Up to 10 trading accounts",
-      "Unlimited orders",
-      "Advanced reporting",
-      "Priority support",
-      "Team access (3 users)",
-      "Custom webhooks",
-    ],
-    current: true,
-  },
+    {
+      name: "Free",
+      price: "₦0",
+      period: "/month",
+      volumeCapacity: "1,000 vc/month",
+      features: [
+        "Up to 2 trading accounts",
+        "50 orders per month",
+        "Basic reporting",
+        "Email support",
+        "Single user access",
+      ],
+    },
+    {
+      name: "Pro",
+      price: "₦14,999",
+      period: "/month",
+      volumeCapacity: "50,000 vc/month",
+      features: [
+        "Up to 10 trading accounts",
+        "Unlimited orders",
+        "Advanced reporting",
+        "Priority support",
+        "Team access (3 users)",
+        "Custom webhooks",
+      ],
+      current: true,
+    },
 
-  {
-    name: "Custom",
-    price: "Contact",
-    period: "/custom pricing",
-    volumeCapacity: "Custom vc/month",
-    features: [
-      "White-label solution",
-      "Enterprise support",
-      "Custom integrations",
-      "SLA guarantee",
-      "Dedicated infrastructure",
-    ],
-  },
-]
+    {
+      name: "Custom",
+      price: "Contact",
+      period: "/custom pricing",
+      volumeCapacity: "Custom vc/month",
+      features: [
+        "White-label solution",
+        "Enterprise support",
+        "Custom integrations",
+        "SLA guarantee",
+        "Dedicated infrastructure",
+      ],
+    },
+  ]
 
 
   return (
@@ -67,7 +67,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">D</span>
             </div>
-            <span className="text-2xl font-bold text-primary">Doolf</span>
+            <span className="text-2xl font-bold text-primary">Dolf</span>
           </div>
           <div className="flex gap-4">
             <Button variant="ghost" onClick={onSignIn}>
@@ -88,7 +88,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
               Automate Your Crypto Trading <span className="text-primary">& Payouts</span>
             </h1>
             <p className="text-xl text-muted-foreground">
-              Doolf is the complete automation platform for Nigerian merchants. Trade on Bybit, manage payouts in NGN,
+              Dolf is the complete automation platform for Nigerian merchants. Trade on Bybit, manage payouts in NGN,
               and scale your business with intelligent risk management.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -158,7 +158,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
       <section className="bg-secondary/20 border-y border-border py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Choose Doolf?</h2>
+            <h2 className="text-4xl font-bold mb-4">Why Choose Dolf?</h2>
             <p className="text-xl text-muted-foreground">Everything you need to trade smart and scale fast</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -218,7 +218,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
               </div>
               <h3 className="text-xl font-bold mb-2">24/7 Support</h3>
               <p className="text-muted-foreground">
-                Dedicated support team available round the clock to help you succeed with Doolf.
+                Dedicated support team available round the clock to help you succeed with Dolf.
               </p>
             </Card>
           </div>
@@ -234,64 +234,62 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
           </p>
         </div>
 
-         <div>
-        <h3 className="text-xl font-semibold text-foreground mb-6">All Plans</h3>
-        <div
-          className="relative"
-          
-        >
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-6 transition-transform duration-500 ease-out"
-            >
-              {plans.map((plan) => (
-                <Card
-                  key={plan.name}
-                  className={`flex-shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${
-                    plan.current ? "bg-primary/10 border-primary" : "bg-card border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
-                   {plan.current && (
-                    <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
-                      Current Plan
-                    </div>
-                  )}
-                  </div>
-                  <div className="mb-3">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
-                  </div>
-                  <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-6">All Plans</h3>
+          <div
+            className="relative"
 
-                  <Button
-                    className={`w-full py-6 ${
-                      plan.current
-                        ? "bg-secondary hover:bg-secondary/90"
-                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                    }`}
+          >
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-6 transition-transform duration-500 ease-out"
+              >
+                {plans.map((plan) => (
+                  <Card
+                    key={plan.name}
+                    className={`flex-shrink-0 w-full md:w-[calc(33.333%-16px)] p-8 border ${plan.current ? "bg-primary/10 border-primary" : "bg-card border-border"
+                      }`}
                   >
-                    {plan.current ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
-                  </Button>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-2xl font-bold text-foreground mb-4">{plan.name}</h3>
+                      {plan.current && (
+                        <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full mb-6 w-fit">
+                          Current Plan
+                        </div>
+                      )}
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                      <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
+                    </div>
+                    <p className="text-sm text-primary font-semibold">{plan.volumeCapacity}</p>
 
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-foreground text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    <Button
+                      className={`w-full py-6 ${plan.current
+                          ? "bg-secondary hover:bg-secondary/90"
+                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                        }`}
+                    >
+                      {plan.current ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
+                    </Button>
 
-                </Card>
-              ))}
+                    <ul className="space-y-4 mb-8">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <span className="text-foreground text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
 
-         
+
+          </div>
         </div>
-      </div>
       </section>
 
       {/* CTA Section */}
@@ -300,7 +298,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
           <h2 className="text-4xl font-bold mb-4">Ready to Start Trading Smarter?</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join thousands of Nigerian merchants who are automating their crypto trading and scaling their business with
-            Doolf.
+            Dolf.
           </p>
           <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={onGetStarted}>
             Start Your Free Trial Now <ArrowRight className="ml-2 w-4 h-4" />
@@ -317,7 +315,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                   <span className="text-primary-foreground font-bold">D</span>
                 </div>
-                <span className="font-bold text-primary">Doolf</span>
+                <span className="font-bold text-primary">Dolf</span>
               </div>
               <p className="text-sm text-muted-foreground">The automation platform for Nigerian crypto traders.</p>
             </div>
@@ -383,7 +381,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
             </div>
           </div>
           <div className="border-t border-border pt-8 flex justify-between items-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Doolf. All rights reserved.</p>
+            <p>&copy; 2025 Dolf. All rights reserved.</p>
             <div className="flex gap-4">
               <a href="#" className="hover:text-foreground transition">
                 Twitter

@@ -19,11 +19,6 @@ export function Automation() {
 
   return (
     <>
-      <AutomationNotificationsCard
-        automationSettings={paymentForm.automationSettings}
-        isFormDisabled={paymentForm.isFormDisabled}
-        onToggleChange={paymentForm.handleToggleChange}
-      />
       <PaymentSettingsCard
         automationSettings={paymentForm.automationSettings}
         automationEnabled={paymentForm.automationEnabled}
@@ -34,6 +29,11 @@ export function Automation() {
         onToggleChange={paymentForm.handleToggleChange}
         onNumberInputChange={paymentForm.handleNumberInputChange}
         onSaveSettings={paymentForm.handleSaveSettings}
+      />
+      <AutomationNotificationsCard
+        automationSettings={paymentForm.automationSettings}
+        isFormDisabled={paymentForm.isFormDisabled}
+        onToggleChange={paymentForm.handleToggleChange}
       />
       <OrderAutomationCard
         isFormDisabled={paymentForm.isFormDisabled}

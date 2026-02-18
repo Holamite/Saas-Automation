@@ -3,7 +3,7 @@ interface BrandHeaderProps {
   subtitle?: string
 }
 
-export function BrandHeader({ title = 'Doolf', subtitle }: BrandHeaderProps) {
+export function BrandHeader({ title = 'Dolf', subtitle }: BrandHeaderProps) {
   return (
     <div className="text-center mb-8">
       <div className="flex items-center justify-center gap-3 mb-4">

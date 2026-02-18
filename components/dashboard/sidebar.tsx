@@ -31,12 +31,12 @@ export function Sidebar() {
   //     })
   //   : 'N/A'
   const subscriptionStatus = user?.subscription?.subscriptionStatus || 'Free'
-  const nextBillingDate = user?.subscription?.nextBillingDate 
-    ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })
+  const nextBillingDate = user?.subscription?.nextBillingDate
+    ? new Date(user.subscription.nextBillingDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
     : 'N/A'
 
   return (
@@ -46,7 +46,7 @@ export function Sidebar() {
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold">D</span>
           </div>
-          <h1 className="text-xl font-bold text-sidebar-foreground">Doolf</h1>
+          <h1 className="text-xl font-bold text-sidebar-foreground">Dolf</h1>
         </div>
       </div>
 

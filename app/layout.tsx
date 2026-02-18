@@ -11,9 +11,9 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Doolf - Trading Automation Platform",
-  description: "Automate your Bybit trading and payout management with Doolf",
-  generator: "Doolf.app",
+  title: "Dolf - Trading Automation Platform",
+  description: "Automate your Bybit trading and payout management with Dolf",
+  generator: "Dolf.app",
 }
 
 export default function RootLayout({

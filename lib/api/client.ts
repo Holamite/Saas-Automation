@@ -1,5 +1,5 @@
 /**
- * Centralized Axios client for Doolf
+ * Centralized Axios client for Dolf
  * - HTTP-only cookies; withCredentials: true on all requests
  * - Auto refresh on 401/403 with one retry of the original request
  * - Proxies /auth/* and /users/* to /api/auth/* and /api/users/*

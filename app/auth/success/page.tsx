@@ -47,7 +47,7 @@ export default function AuthSuccess() {
         <div className="text-center space-y-2">
           <div className="inline-block">
             <div className="text-4xl font-bold bg-linear-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              Doolf
+              Dolf
             </div>
           </div>
           <p className="text-muted-foreground text-sm font-medium tracking-wide">COMPLETING AUTHENTICATION</p>

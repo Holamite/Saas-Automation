@@ -39,23 +39,21 @@ export function SetupOverlay({
               <div className="mb-6">
                 <Dialog.Title className="text-2xl font-bold text-foreground mb-2">Complete Your Setup</Dialog.Title>
                 <Dialog.Description className="text-muted-foreground">
-                  Connect your Bank and link your Bybit account to get started with Doolf automation.
+                  Connect your Bank and link your Bybit account to get started with Dolf automation.
                 </Dialog.Description>
               </div>
 
               <div className="space-y-4 mb-8">
                 <div
-                  className={`p-4 rounded-xl border transition-all duration-300 ${
-                    walletSetup
+                  className={`p-4 rounded-xl border transition-all duration-300 ${walletSetup
                       ? "border-primary/50 bg-primary/10"
                       : "border-border bg-secondary/30 hover:border-primary/30 hover:bg-secondary/50"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
-                        walletSetup ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${walletSetup ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                        }`}
                     >
                       {walletSetup ? "✓" : "1"}
                     </div>
@@ -71,17 +69,15 @@ export function SetupOverlay({
                 </div>
 
                 <div
-                  className={`p-4 rounded-xl border transition-all duration-300 ${
-                    bybitConnected
+                  className={`p-4 rounded-xl border transition-all duration-300 ${bybitConnected
                       ? "border-primary/50 bg-primary/10"
                       : "border-border bg-secondary/30 hover:border-primary/30 hover:bg-secondary/50"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
-                        bybitConnected ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${bybitConnected ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                        }`}
                     >
                       {bybitConnected ? "✓" : "2"}
                     </div>
