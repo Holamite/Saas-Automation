@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/dashboardInfo"
 // import { useWalletInfo } from "@/hooks/use-wallet-query"
 import { useBybitKeyStatus } from "@/hooks/use-bybit-query"
+import { usePaymentProviders } from "@/hooks/use-payment-query"
 import { Loading } from "@/components/ui/loading"
 
 // TODO: Replace with API call to fetch orders
@@ -57,13 +58,14 @@ export function DashboardPage() {
   // React Query hooks for setup status - only when authenticated
   // const { data: walletInfo, isLoading: isLoadingWallet } = useWalletInfo(isAuthenticated && !isAuthLoading)
   const { data: bybitStatus, isLoading: isLoadingBybit } = useBybitKeyStatus(isAuthenticated && !isAuthLoading)
+  const { data: paymentProviders, isLoading: isLoadingProviders } = usePaymentProviders(isAuthenticated && !isAuthLoading)
   
   const [isClient, setIsClient] = useState<boolean>(false)
 
   // Derived state from backend (source of truth - not stored locally)
-  const walletSetup = false
+  const walletSetup = (paymentProviders?.length ?? 0) > 0
   const bybitConnected = bybitStatus?.hasKey ?? false
-  const isInitialized = !isLoadingBybit
+  const isInitialized = !isLoadingBybit && !isLoadingProviders
   const setupIncomplete = !walletSetup || !bybitConnected
 
   // User can skip overlay for this session; overlay visibility is derived from backend + skip
