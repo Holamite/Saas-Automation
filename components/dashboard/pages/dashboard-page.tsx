@@ -60,13 +60,15 @@ export function DashboardPage() {
   
   const [isClient, setIsClient] = useState<boolean>(false)
 
-  // Derived state from backend
-  const walletSetup = false;
+  // Derived state from backend (source of truth - not stored locally)
+  const walletSetup = false
   const bybitConnected = bybitStatus?.hasKey ?? false
   const isInitialized = !isLoadingBybit
-  
-  // Derived state - show overlay if either setup is incomplete
-  const [showOverlay, setShowOverlay] = useState<boolean>(!walletSetup || !bybitConnected)
+  const setupIncomplete = !walletSetup || !bybitConnected
+
+  // User can skip overlay for this session; overlay visibility is derived from backend + skip
+  const [userSkipped, setUserSkipped] = useState<boolean>(false)
+  const showOverlay = isInitialized && setupIncomplete && !userSkipped
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -85,9 +87,7 @@ export function DashboardPage() {
   }
 
   const handleSkipSetup = () => {
-    // User chooses to skip setup for now
-    // No localStorage needed - backend is source of truth
-    setShowOverlay(false)
+    setUserSkipped(true)
   }
 
   // Don't render until client-side hydration is complete

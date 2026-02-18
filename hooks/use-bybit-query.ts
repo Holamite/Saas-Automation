@@ -24,21 +24,23 @@ export const bybitKeys = {
 }
 
 /**
- * Hook to fetch Bybit key status
- * Auto-fetches on mount, caches result, and handles errors
+ * Hook to fetch Bybit key status from backend (source of truth)
+ * Refetches on mount so refresh/navigation always reflects saved state
  */
 export function useBybitKeyStatus(enabled = true) {
   return useQuery<BybitKeyStatusResponse>({
     queryKey: bybitKeys.status(),
     queryFn: getBybitKeyStatus,
     retry: 1,
-    enabled, // Only fetch when enabled (e.g., user is authenticated)
+    enabled,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   })
 }
 
 /**
  * Hook to add Bybit API key
- * Automatically invalidates and refetches status on success
+ * Invalidates status so next read comes from backend
  */
 export function useAddBybitKey() {
   const queryClient = useQueryClient()
@@ -46,10 +48,7 @@ export function useAddBybitKey() {
   return useMutation<BybitKeyResponse, Error, AddBybitKeyDto>({
     mutationFn: addBybitKey,
     onSuccess: () => {
-      // Update status cache to show connected
-      queryClient.setQueryData<BybitKeyStatusResponse>(bybitKeys.status(), {
-        hasKey: true,
-      })
+      queryClient.invalidateQueries({ queryKey: bybitKeys.status() })
     },
   })
 }
@@ -71,7 +70,7 @@ export function useUpdateBybitKey() {
 
 /**
  * Hook to remove Bybit API key
- * Automatically invalidates and refetches status on success
+ * Invalidates status so next read comes from backend
  */
 export function useRemoveBybitKey() {
   const queryClient = useQueryClient()
@@ -79,10 +78,7 @@ export function useRemoveBybitKey() {
   return useMutation<BybitKeyResponse, Error>({
     mutationFn: removeBybitKey,
     onSuccess: () => {
-      // Update status cache to show disconnected
-      queryClient.setQueryData<BybitKeyStatusResponse>(bybitKeys.status(), {
-        hasKey: false,
-      })
+      queryClient.invalidateQueries({ queryKey: bybitKeys.status() })
     },
   })
 }

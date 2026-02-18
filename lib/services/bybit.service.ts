@@ -26,11 +26,24 @@ export interface BybitKeyStatusResponse {
   apiKey?: string
 }
 
+/** Backend may return hasKey or indicate key presence via apiKey; normalize to hasKey */
+function normalizeBybitStatus(data: unknown): BybitKeyStatusResponse {
+  if (data && typeof data === 'object' && 'hasKey' in data && typeof (data as { hasKey: unknown }).hasKey === 'boolean') {
+    return data as BybitKeyStatusResponse
+  }
+  const obj = data as Record<string, unknown> | null | undefined
+  return {
+    hasKey: !!(obj?.hasKey === true || (obj?.apiKey != null && obj.apiKey !== '')),
+    apiKey: typeof obj?.apiKey === 'string' ? obj.apiKey : undefined,
+  }
+}
+
 /**
- * Get Bybit API key status
+ * Get Bybit API key status from backend (source of truth for connected state)
  */
 export const getBybitKeyStatus = async (): Promise<BybitKeyStatusResponse> => {
-  return api.get<BybitKeyStatusResponse>(BYBIT_ENDPOINTS.ADD_KEY)
+  const data = await api.get<unknown>(BYBIT_ENDPOINTS.ADD_KEY)
+  return normalizeBybitStatus(data)
 }
 
 /**
