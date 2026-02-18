@@ -85,15 +85,20 @@ export function useUpdatePaymentProvider() {
 
 /**
  * Set a provider as primary.
+ * Refetches list and primary from backend so the UI shows only the new primary as active.
  */
 export function useSetPrimaryPaymentProvider() {
   const queryClient = useQueryClient()
 
   return useMutation<{ message: string }, Error, PaymentProviderName>({
     mutationFn: (name) => setPrimaryPaymentProvider(name),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: paymentKeys.list() })
       queryClient.invalidateQueries({ queryKey: paymentKeys.primary() })
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: paymentKeys.list() }),
+        queryClient.refetchQueries({ queryKey: paymentKeys.primary() }),
+      ])
     },
   })
 }

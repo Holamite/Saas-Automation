@@ -4,14 +4,16 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useBybitKeyStatus, useAddBybitKey, useUpdateBybitKey, useRemoveBybitKey } from "@/hooks/use-bybit-query"
-import { usePaymentProviders, useAddPaymentProvider, useUpdatePaymentProvider, useSetPrimaryPaymentProvider } from "@/hooks/use-payment-query"
+import { usePaymentProviders, usePrimaryPaymentProvider, useAddPaymentProvider, useUpdatePaymentProvider, useSetPrimaryPaymentProvider } from "@/hooks/use-payment-query"
 import type { CreatePaymentDto, PaymentProviderName } from "@/lib/services/payment.service"
 import { ApiClientError } from "@/lib/api/client"
+import { cn } from "@/lib/utils"
 import { extractErrorMessage } from "@/lib/utils/error-handling"
 import { validatePaymentProvider } from "@/lib/validation/payment-provider"
 
@@ -36,9 +38,11 @@ export function ConnectivityPage() {
 
   // React Query hooks for payment providers - only when authenticated
   const { data: paymentProviders, isLoading: isLoadingProviders } = usePaymentProviders(isAuthenticated && !isAuthLoading)
+  const { data: primaryFromBackend } = usePrimaryPaymentProvider(isAuthenticated && !isAuthLoading)
   const addProviderMutation = useAddPaymentProvider()
   const updateProviderMutation = useUpdatePaymentProvider()
   const setPrimaryProviderMutation = useSetPrimaryPaymentProvider()
+  const [selectedPrimary, setSelectedPrimary] = useState<PaymentProviderName | "">("")
 
   // Bybit state
   const [bybitApiKey, setBybitApiKey] = useState("")
@@ -56,14 +60,34 @@ export function ConnectivityPage() {
   const [nombaPrivateKey, setNombaPrivateKey] = useState("")
   const [nombaAccountId, setNombaAccountId] = useState("")
 
-  // Derived state
+  // Derived state — primary comes from backend primary endpoint so it stays in sync after switch
   const isConnected = bybitStatus?.hasKey ?? false
   const hasBankProviders = (paymentProviders?.length ?? 0) > 0
-  const primaryProvider = paymentProviders?.find((p) => p.isPrimary) || null
+  const primaryProvider = primaryFromBackend ?? paymentProviders?.find((p) => p.isPrimary) ?? null
 
   const primaryProviderLabel = primaryProvider
-    ? supportedBanks.find((b) => b.value === primaryProvider.name)?.label || primaryProvider.name
+    ? supportedBanks.find(b => b.value === primaryProvider.provider)?.label ?? primaryProvider.provider
     : null
+
+
+
+  console.log("PrimaryProvider: ", primaryProvider)
+  console.log("PrimaryProviderLabel", primaryProviderLabel)
+
+  // When backend reports connected providers, default the selected bank to the primary
+  // (or first connected provider) so UI reflects server state after refresh.
+  useEffect(() => {
+    if (primaryProvider?.name) {
+      setSelectedPrimary(primaryProvider.name)
+    }
+  }, [primaryProvider?.name])
+
+  // useEffect(() => {
+  //   if (!selectedBank && paymentProviders && paymentProviders.length > 0) {
+  //     const next = (primaryProvider?.name ?? paymentProviders[0].name) as SupportedBankValue
+  //     setSelectedBank(next)
+  //   }
+  // }, [selectedBank, paymentProviders, primaryProvider?.name])
 
   const handleAddBybitKey = () => {
     if (!bybitApiKey.trim() || !bybitApiSecret.trim()) {
@@ -294,7 +318,29 @@ export function ConnectivityPage() {
     )
   }
 
+  // const handleSetPrimaryProvider = (name: PaymentProviderName) => {
+  //   setPrimaryProviderMutation.mutate(name, {
+  //     onSuccess: (response) => {
+  //       toast({
+  //         title: "Success",
+  //         description: response.message || "Primary provider updated",
+  //       })
+  //     },
+  //     onError: (error) => {
+  //       const message = extractErrorMessage(error, "Failed to set primary provider")
+  //       toast({
+  //         title: "Error",
+  //         description: message,
+  //         variant: "destructive",
+  //       })
+  //     },
+  //   })
+  // }
+
   const handleSetPrimaryProvider = (name: PaymentProviderName) => {
+    // Optimistic UI update
+    setSelectedPrimary(name)
+
     setPrimaryProviderMutation.mutate(name, {
       onSuccess: (response) => {
         toast({
@@ -303,19 +349,16 @@ export function ConnectivityPage() {
         })
       },
       onError: (error) => {
-        if (error instanceof ApiClientError) {
-          toast({
-            title: error.title || "Error",
-            description: error.message || "Failed to set primary provider",
-            variant: "destructive",
-          })
-        } else {
-          toast({
-            title: "Error",
-            description: "An unexpected error occurred",
-            variant: "destructive",
-          })
-        }
+        const message = extractErrorMessage(error, "Failed to set primary provider")
+
+        // Revert UI if backend fails
+        setSelectedPrimary(primaryProvider?.name ?? "")
+
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        })
       },
     })
   }
@@ -573,32 +616,56 @@ export function ConnectivityPage() {
                     "Connect"
                   )}
                 </Button>
-                <Button variant="outline">Test Connection</Button>
               </div>
 
               {hasBankProviders && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm text-muted-foreground">Connected providers</p>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm font-medium text-foreground">Primary provider</p>
+                  <p className="text-sm text-muted-foreground">
+                    Choose which connected provider to use as primary. Only one can be active.
+                  </p>
+                  <RadioGroup
+                    value={selectedPrimary}
+                    onValueChange={(value) => {
+                      if (!value || value === selectedPrimary) return
+                      handleSetPrimaryProvider(value as PaymentProviderName)
+                    }}
+                    disabled={setPrimaryProviderMutation.isPending}
+                    className="flex gap-2 justify-end"
+                  >
                     {paymentProviders?.map((provider) => {
                       const label =
                         supportedBanks.find((b) => b.value === provider.name)?.label || provider.name
-                      const isPrimary = provider.isPrimary
+                      const isPrimary = primaryProvider?.name === provider.name
                       return (
-                        <Button
+                        <label
                           key={provider.name}
-                          variant={isPrimary ? "default" : "outline"}
-                          size="sm"
-                          className="px-3"
-                          onClick={() => !isPrimary && handleSetPrimaryProvider(provider.name as PaymentProviderName)}
-                          disabled={setPrimaryProviderMutation.isPending}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors",
+                            "hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+                            isPrimary ? "border-primary bg-primary/5" : "border-border"
+                          )}
+                          htmlFor={`primary-${provider.name}`}
                         >
-                          {label}
-                          {isPrimary && <span className="ml-1 text-xs text-muted-foreground">(Primary)</span>}
-                        </Button>
+                          <RadioGroupItem
+                            id={`primary-${provider.name}`}
+                            value={provider.name}
+                            disabled={setPrimaryProviderMutation.isPending}
+                          />
+                          <span className="text-sm font-medium">{label}</span>
+                          {isPrimary && (
+                            <span className="text-xs text-muted-foreground">(Primary)</span>
+                          )}
+                        </label>
                       )
                     })}
-                  </div>
+                  </RadioGroup>
+                  {setPrimaryProviderMutation.isPending && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Updating primary...
+                    </div>
+                  )}
                 </div>
               )}
             </>

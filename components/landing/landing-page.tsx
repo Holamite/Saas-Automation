@@ -266,8 +266,8 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
 
                     <Button
                       className={`w-full py-6 ${plan.current
-                          ? "bg-secondary hover:bg-secondary/90"
-                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                        ? "bg-secondary hover:bg-secondary/90"
+                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
                         }`}
                     >
                       {plan.current ? "Current Plan" : plan.name === "Custom" ? "Contact Sales" : "Choose Plan"}
@@ -381,7 +381,7 @@ export function LandingPage({ onGetStarted, onSignIn }: LandingPageProps) {
             </div>
           </div>
           <div className="border-t border-border pt-8 flex justify-between items-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Dolf. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Dolf. All rights reserved.</p>
             <div className="flex gap-4">
               <a href="#" className="hover:text-foreground transition">
                 Twitter
