@@ -2,8 +2,8 @@
 
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Automation } from "@/components/dashboard/settingInfo/automation"
-import Notification from "../settingInfo/Notification"
+import { Automation } from "@/components/settingInfo/automation"
+import Notification from "../../settingInfo/Notification"
 
 export function SettingsPage() {
   return (
@@ -22,7 +22,7 @@ export function SettingsPage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="mt-6 space-y-6">
-          <Notification/>
+          <Notification />
         </TabsContent>
 
         {/* Management Tab */}
@@ -42,7 +42,7 @@ export function SettingsPage() {
 
         {/* Automation Tab */}
         <TabsContent value="automation" className="mt-6 space-y-6">
-            <Automation/>
+          <Automation />
         </TabsContent>
       </Tabs>
     </div>

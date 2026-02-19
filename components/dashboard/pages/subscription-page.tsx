@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useSubscriptionStatus, useInitiateSubscription } from "@/hooks/use-subscription-query"
 import { Tier, PaymentMethod } from "@/lib/types/subscription.types"
-import { PaymentMethodModal } from "@/components/dashboard/subscriptionInfo/payment-method-modal"
+import { PaymentMethodModal } from "@/components/subscriptionInfo/payment-method-modal"
 import { ApiClientError } from "@/lib/api/client"
 import { Loading } from "@/components/ui/loading"
 
@@ -255,8 +255,8 @@ export function SubscriptionPage() {
 
                     <Button
                       className={`w-full py-6 ${isCurrentPlan
-                          ? "bg-secondary hover:bg-secondary/90"
-                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                        ? "bg-secondary hover:bg-secondary/90"
+                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
                         }`}
                       onClick={() => !isCurrentPlan && handleChoosePlan(plan.name)}
                       disabled={isCurrentPlan}

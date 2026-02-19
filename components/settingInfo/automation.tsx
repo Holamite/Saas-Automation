@@ -3,10 +3,10 @@
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/components/ui/use-toast'
 import { useAutomationPaymentForm } from '@/hooks/use-automation-payment-form'
-import { OrderAutomationCard } from '@/components/dashboard/settingInfo/OrderAutomationCard'
-import { AdStrategyCard } from '@/components/dashboard/settingInfo/AdStrategyCard'
-import { PaymentSettingsCard } from '@/components/dashboard/settingInfo/PaymentSettingsCard'
-import { AutomationNotificationsCard } from '@/components/dashboard/settingInfo/AutomationNotificationsCard'
+import { OrderAutomationCard } from '@/components/settingInfo/OrderAutomationCard'
+import { AdStrategyCard } from '@/components/settingInfo/AdStrategyCard'
+import { PaymentSettingsCard } from '@/components/settingInfo/PaymentSettingsCard'
+import { AutomationNotificationsCard } from '@/components/settingInfo/AutomationNotificationsCard'
 
 export function Automation() {
   const { isAuthenticated } = useAuth()

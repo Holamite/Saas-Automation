@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import {
   InventoryCard,
-  LiveOrdersTable,
-  RequestMetricsCard,
-  SetupOverlay,
-} from "@/components/dashboard/dashboardInfo"
-// import { useWalletInfo } from "@/hooks/use-wallet-query"
+} from "@/components/dashboardInfo/inventoryCard"
+import { RequestMetricsCard } from "@/components/dashboardInfo/requestMetricsCard"
+import { SetupOverlay } from "@/components/dashboardInfo/setupOverlay"
+import { LiveOrdersTable } from "@/components/dashboardInfo/liveOrdersTable"
+
 import { useBybitKeyStatus } from "@/hooks/use-bybit-query"
 import { usePaymentProviders } from "@/hooks/use-payment-query"
 import { Loading } from "@/components/ui/loading"
@@ -54,12 +54,12 @@ const MOCK_ORDERS = [
 
 export function DashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth()
-  
+
   // React Query hooks for setup status - only when authenticated
   // const { data: walletInfo, isLoading: isLoadingWallet } = useWalletInfo(isAuthenticated && !isAuthLoading)
   const { data: bybitStatus, isLoading: isLoadingBybit } = useBybitKeyStatus(isAuthenticated && !isAuthLoading)
   const { data: paymentProviders, isLoading: isLoadingProviders } = usePaymentProviders(isAuthenticated && !isAuthLoading)
-  
+
   const [isClient, setIsClient] = useState<boolean>(false)
 
   // Derived state from backend (source of truth - not stored locally)
@@ -95,22 +95,22 @@ export function DashboardPage() {
   // Don't render until client-side hydration is complete
   if (!isClient || !isInitialized) {
     return (
-        <div className="p-8 space-y-8">
-          <div className="flex justify-center items-center h-full">
-            <Loading message="Loading dashboard..." />
-          </div>
+      <div className="p-8 space-y-8">
+        <div className="flex justify-center items-center h-full">
+          <Loading message="Loading dashboard..." />
         </div>
+      </div>
     )
   }
 
- 
+
   const orders = MOCK_ORDERS
 
   return (
     <TooltipProvider>
       <SetupOverlay
         open={showOverlay}
-        onOpenChange={() => {}}
+        onOpenChange={() => { }}
         walletSetup={walletSetup}
         bybitConnected={bybitConnected}
         onWalletSetupComplete={handleWalletSetupComplete}
@@ -120,9 +120,9 @@ export function DashboardPage() {
 
       <div className="p-8 space-y-8">
         <div className={cn(
-        "grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ease-out",
-        showOverlay && "blur-sm scale-[0.99] pointer-events-none select-none"
-      )}>
+          "grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ease-out",
+          showOverlay && "blur-sm scale-[0.99] pointer-events-none select-none"
+        )}>
           <InventoryCard />
           <RequestMetricsCard />
         </div>
