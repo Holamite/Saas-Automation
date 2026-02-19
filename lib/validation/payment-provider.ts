@@ -46,23 +46,65 @@ function exactLength(value: string, fieldName: string, len: number): string | nu
   return null
 }
 
-/** Monnify form fields (as used in connectivity page state) */
-export interface MonnifyFields {
+function validateBankAccountFields(fields: BankAccountFields): string[] {
+  const errors: string[] = []
+  const { maxIdLength, accountNumberLength, accountNumberDigitsOnly } = PAYMENT_PROVIDER_RULES
+
+  const r1 = required(fields.accountNumber, 'Account number')
+  if (r1) errors.push(r1)
+  else {
+    const r2 = maxLength(fields.accountNumber, 'Account number', maxIdLength)
+    if (r2) errors.push(r2)
+    else if (accountNumberDigitsOnly) {
+      const r3 = digitsOnly(fields.accountNumber, 'Account number')
+      if (r3) errors.push(r3)
+      else {
+        const r4 = exactLength(fields.accountNumber, 'Account number', accountNumberLength)
+        if (r4) errors.push(r4)
+      }
+    }
+  }
+
+  const an = required(fields.accountName, 'Account name')
+  if (an) errors.push(an)
+  else {
+    const an2 = maxLength(fields.accountName, 'Account name', 128)
+    if (an2) errors.push(an2)
+  }
+
+  const bn = required(fields.bankName, 'Bank name')
+  if (bn) errors.push(bn)
+
+  const bc = required(fields.bankCode, 'Bank code')
+  if (bc) errors.push(bc)
+
+  return errors
+}
+
+/** Common bank account fields shared by all providers */
+export interface BankAccountFields {
+  accountNumber: string
+  accountName: string
+  bankName: string
+  bankCode: string
+}
+
+/** Monnify form fields */
+export interface MonnifyFields extends BankAccountFields {
   apiKey: string
   secretKey: string
   contractCode: string
   walletNumber: string
-  accountNumber: string
 }
 
-/** Paystack form fields */
-export interface PaystackFields {
+/** Paystack form fields (publicKey = apiKey for backend) */
+export interface PaystackFields extends BankAccountFields {
   publicKey: string
   secretKey: string
 }
 
-/** Nomba form fields */
-export interface NombaFields {
+/** Nomba form fields (clientId = apiKey, accountId used for accountNumber in backend) */
+export interface NombaFields extends BankAccountFields {
   clientId: string
   privateKey: string
   accountId: string
@@ -70,7 +112,7 @@ export interface NombaFields {
 
 export function validateMonnifyFields(fields: MonnifyFields): PaymentProviderValidationResult {
   const errors: string[] = []
-  const { maxCredentialLength, maxIdLength, accountNumberLength, accountNumberDigitsOnly } = PAYMENT_PROVIDER_RULES
+  const { maxCredentialLength, maxIdLength, accountNumberDigitsOnly } = PAYMENT_PROVIDER_RULES
 
   const r1 = required(fields.apiKey, 'API key')
   if (r1) errors.push(r1)
@@ -86,20 +128,7 @@ export function validateMonnifyFields(fields: MonnifyFields): PaymentProviderVal
     if (s2) errors.push(s2)
   }
 
-  const a1 = required(fields.accountNumber, 'Account number')
-  if (a1) errors.push(a1)
-  else {
-    const a2 = maxLength(fields.accountNumber, 'Account number', maxIdLength)
-    if (a2) errors.push(a2)
-    else if (accountNumberDigitsOnly) {
-      const a3 = digitsOnly(fields.accountNumber, 'Account number')
-      if (a3) errors.push(a3)
-      else {
-        const a4 = exactLength(fields.accountNumber, 'Account number', accountNumberLength)
-        if (a4) errors.push(a4)
-      }
-    }
-  }
+  errors.push(...validateBankAccountFields(fields))
 
   if (fields.contractCode.trim()) {
     const c = maxLength(fields.contractCode, 'Contract code', maxIdLength)
@@ -135,6 +164,8 @@ export function validatePaystackFields(fields: PaystackFields): PaymentProviderV
     if (s2) errors.push(s2)
   }
 
+  errors.push(...validateBankAccountFields(fields))
+
   return { valid: errors.length === 0, errors }
 }
 
@@ -162,6 +193,8 @@ export function validateNombaFields(fields: NombaFields): PaymentProviderValidat
     const a2 = maxLength(fields.accountId, 'Account ID', maxIdLength)
     if (a2) errors.push(a2)
   }
+
+  errors.push(...validateBankAccountFields(fields))
 
   return { valid: errors.length === 0, errors }
 }

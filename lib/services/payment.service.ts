@@ -1,4 +1,4 @@
-import { api } from '@/lib/api/client'
+import { api, ApiClientError } from '@/lib/api/client'
 
 export type PaymentProviderName = 'NOMBA' | 'MONNIFY' | 'PAYSTACK'
 
@@ -8,6 +8,11 @@ const PAYMENT_ENDPOINTS = {
   PROVIDER: (name: PaymentProviderName) => `/payment/providers/${name}`,
   SET_PRIMARY: (name: PaymentProviderName) => `/payment/providers/primary/${name}`,
 } as const
+
+/** Status response for a single provider (matches Bybit pattern: hasKey -> hasProvider) */
+export interface PaymentProviderStatusResponse {
+  hasProvider: boolean
+}
 
 /** Matches backend CreatePaymentDto (shared across NOMBA, MONNIFY, PAYSTACK) */
 export interface CreatePaymentDto {
@@ -27,21 +32,54 @@ export interface CreatePaymentDto {
 export type UpdatePaymentDto = CreatePaymentDto
 
 export interface UserPaymentProvider {
-  name: PaymentProviderName
+  name?: PaymentProviderName
+  /** Backend may return provider instead of name */
+  provider?: PaymentProviderName
   isPrimary?: boolean
-  // Other backend fields are allowed but not required on the frontend
   [key: string]: unknown
+}
+
+/** Normalize provider id from backend response (handles both name and provider fields) */
+export function getProviderId(
+  p: UserPaymentProvider
+): PaymentProviderName | undefined {
+  const id = (p.name ?? p.provider) as string | undefined
+  if (id === 'MONNIFY' || id === 'PAYSTACK' || id === 'NOMBA') return id
+  return undefined
 }
 
 export type PrimaryPaymentProvider = UserPaymentProvider | null
 
 /**
  * Get all payment providers configured for the current user.
+ * Handles backend response shapes: raw array, { providers: [...] }, { data: [...] }
  */
 export async function getUserPaymentProviders(): Promise<UserPaymentProvider[]> {
   const data = await api.get<unknown>(PAYMENT_ENDPOINTS.USER_PROVIDERS)
-  if (!Array.isArray(data)) return []
-  return data as UserPaymentProvider[]
+  const arr = Array.isArray(data)
+    ? data
+    : (data as Record<string, unknown>)?.providers ?? (data as Record<string, unknown>)?.data
+  if (!Array.isArray(arr)) return []
+  return arr as UserPaymentProvider[]
+}
+
+/**
+ * Check if a specific payment provider exists for the current user.
+ * Uses GET /payment/providers/:name - 200 = exists, 404 = not exists.
+ * Matches Bybit pattern: getBybitKeyStatus -> getPaymentProviderStatus.
+ */
+export async function getPaymentProviderStatus(
+  name: PaymentProviderName
+): Promise<PaymentProviderStatusResponse> {
+  try {
+    await api.get<unknown>(PAYMENT_ENDPOINTS.PROVIDER(name))
+    return { hasProvider: true }
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 404) {
+      return { hasProvider: false }
+    }
+    throw error
+  }
 }
 
 /**
